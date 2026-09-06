@@ -15,6 +15,10 @@ unambiguous rules, and instant project understanding via the three living contex
 
 ## Completed
 
+- **Skills bootstrap via `Skills.py --yes` (2026-09-06)** — installed 34 skills into `.agents/skills/` (8 GSAP, 1 Hallmark, 13 Taste, 12 Emil Kowalski — all security-clean per installer). Impeccable design engine FAILED (`npm ECOMPROMISED` — skipped, not forced). Side effect: `npm init -y` created root `package.json`. Open: Spec Kit (`specify`) install+init DONE (2026-09-06) — `specify-cli` via uv, `specify init --here --force --non-interactive --integration opencode`; `.specify/` + `.opencode/commands/` scaffolded, root `AGENTS.md` untouched.
+- **Key-collision fix in `GitHubRepositoriesMenu` (2026-09-06)** — the menu hrefs were all `#` while the list used `key={repository.href}`, causing duplicate-key warnings; switched key to `repository.label`. No logic or routes changed.
+- **Dashboard setup in `admin-dashboard/` (2026-09-06)** — pruned unused docs (`README.md`, `CONTRIBUTING.md`, `LICENSE`, `media/`); set package and display naming (`Admin Dashboard` in `package.json`, `package-lock.json`, `.cta.json`, `manifest.json`, `app-config.ts`, `AGENTS.md`); neutralized sidebar support card and header repository menu (placeholder links); standardized demo data on placeholder identities (`Alex Carter`, `Jordan Lee`, `Example Corp`, `example.com`). No logic or routes changed; no build/lint run per project rule (validation only on explicit request).
+
 - **Root `AGENTS.md` added** — auto-loaded by agents; contains the 3 non-negotiable rules, file reading order, and failure consequences so agents see the protocol even if they never open `Agent.md`.
 - **`Agent.md` rewritten for enforceability** — mandatory routine (read context → classify → load skill → design-first → implement → sync context → verify), required response status block, hard approval gate in the design workflow, context sync protocol, expanded pre-exit checks.
 - **`context/flow.md` added** — Mermaid architecture/user-flow/request-response diagrams, function call maps, route + API tables, mandatory update protocol.

@@ -2,6 +2,12 @@ node_modules/
 .next/
 dist/
 build/
+.output/
+.nitro/
+.tanstack/
+.vite/
+coverage/
+*.tsbuildinfo
 .env
 .env.local
 *.log

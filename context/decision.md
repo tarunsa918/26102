@@ -35,6 +35,8 @@
 
 | ID | Date | Decision | Status | Affects |
 |----|------|----------|--------|---------|
+| ADR-005 | 2026-09-06 | Skip Impeccable install after npm ECOMPROMISED refusal; do not --force | Accepted | repo root tooling |
+| ADR-004 | 2026-09-06 | Initial dashboard setup: neutral naming, placeholder demo data, pruned docs | Accepted | admin-dashboard/ (docs, config, demo data) |
 | ADR-003 | 2026-08-11 | Remove Scaffold.py; canonical trees are the source of truth | Accepted | repo root, folder-structure skill |
 | ADR-002 | 2026-08-11 | Add flow.md + decision.md as living context files | Accepted | context/, all docs |
 | ADR-001 | YYYY-MM-DD | [One-line decision] | Accepted | [files/features] |
@@ -61,6 +63,26 @@
 <!-- Newest decisions go at the top of this section. Keep this section growing — it is
      the living memory of the project. Delete the two example entries below once you
      have real decisions. -->
+
+### ADR-005: Skip Impeccable — npm blocked it as compromised, do not force
+- **Date**: 2026-09-06
+- **Status**: Accepted
+- **Context**: `Skills.py` failed on `npx impeccable install` with `npm error code ECOMPROMISED` (npm's compromised-package block).
+- **Options considered**: Retry with `--force` (rejected — Agent.md explicitly forbids `--force` installs and bypassing a compromise block is a security violation); skip Impeccable, keep the 34 skills that installed cleanly (chosen).
+- **Decision**: Leave Impeccable uninstalled. Revisit only if the package is unflagged upstream.
+- **Why**: Security over completeness — 34 of 35 skill targets landed; one blocked package isn't worth overriding npm's integrity protection.
+- **Consequences**: No Impeccable design engine available; GSAP/Hallmark/Taste/Emil skills cover design needs.
+- **Affects**: repo root tooling
+
+### ADR-004: Dashboard setup — neutral naming and placeholder demo data
+- **Date**: 2026-09-06
+- **Status**: Accepted
+- **Context**: Needed a clean starting point for the dashboard with neutral project naming and realistic placeholder demo data.
+- **Options considered**: Keep unused docs at the template root (rejected — dead weight); leave external links in shared components (rejected — they'd point outside the project); keep real-looking personal demo identities (rejected — placeholders are safer for a shared prototype).
+- **Decision**: Set up `admin-dashboard/` with package/display naming (`Admin Dashboard`); pruned unused docs (`README.md`, `CONTRIBUTING.md`, `LICENSE`, `media/`); neutralized `support-card` and `github-repositories-menu` (placeholder links); standardized demo data on placeholder identities (`Alex Carter`/`Jordan Lee`/`Example Corp`/`example.com`).
+- **Why**: Placeholders keep demo screens realistic without implying real people or external dependencies. Logic, routes, and structure untouched.
+- **Consequences**: No license file ships with the template — add one before distributing. Header menu links are placeholders (`#`) until real links are wired.
+- **Affects**: `admin-dashboard/` docs, config, demo data; `context/progress-tracker.md`
 
 ### ADR-003: Remove Scaffold.py — canonical trees are the source of truth
 - **Date**: 2026-08-11
