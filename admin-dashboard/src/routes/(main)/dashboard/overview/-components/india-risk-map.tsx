@@ -1,4 +1,13 @@
-import { type GeoPermissibleObjects, geoMercator, geoPath } from "d3-geo";
+import { useState } from "react";
+
+import {
+  ComposableMap,
+  createCoordinates,
+  Geographies,
+  Geography,
+  Sphere,
+  ZoomableGroup,
+} from "@vnedyalk0v/react19-simple-maps";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -7,34 +16,27 @@ import indiaStates from "./india-states.json";
 
 type StatesGeoJson = {
   type: "FeatureCollection";
-  features: { type: "Feature"; properties: { name: string }; geometry: GeoJSON.Geometry }[];
+  features: { type: "Feature"; properties: { name?: string }; geometry: GeoJSON.Geometry }[];
 };
 
-const WIDTH = 1000;
-const HEIGHT = 520;
-const INDIA_BBOX: GeoJSON.Polygon = {
-  type: "Polygon",
-  coordinates: [
-    [
-      [68, 5],
-      [98, 5],
-      [98, 38],
-      [68, 38],
-      [68, 5],
-    ],
-  ],
-};
-
-const STATE_FEATURES = (indiaStates as unknown as StatesGeoJson).features;
+const INDIA_GEO = indiaStates as unknown as StatesGeoJson;
+const MAP_CENTER = createCoordinates(82.06, 21.85);
+const MAP_SCALE = 680.42;
 
 function fillFor(high: number): string {
   if (high >= 2) {
-    return "fill-destructive/15";
+    return "color-mix(in oklch, var(--destructive) 15%, transparent)";
   }
   if (high === 1) {
-    return "fill-amber-500/15";
+    return "color-mix(in oklch, var(--amber-500) 20%, transparent)";
   }
-  return "fill-muted";
+  return "var(--muted)";
+}
+
+interface HoverTip {
+  text: string;
+  x: number;
+  y: number;
 }
 
 interface IndiaRiskMapProps {
@@ -44,66 +46,70 @@ interface IndiaRiskMapProps {
 }
 
 export function IndiaRiskMap({ data, selected, onSelect }: IndiaRiskMapProps) {
-  const projection = geoMercator();
-  projection.fitExtent(
-    [
-      [72, 72],
-      [WIDTH - 72, HEIGHT - 72],
-    ],
-    INDIA_BBOX as GeoPermissibleObjects,
-  );
-  const path = geoPath(projection);
+  const [hover, setHover] = useState<HoverTip | null>(null);
   const byState = new Map(data.map((entry) => [entry.state, entry]));
 
   return (
     <Card className="h-full">
       <CardHeader>
         <CardTitle>Risk geography</CardTitle>
-        <CardDescription>High-flag concentration by state</CardDescription>
+        <CardDescription>High-flag concentration by state — drag to pan, scroll to zoom</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="relative h-80 overflow-hidden lg:h-[420px]">
-          <svg
+          <ComposableMap
             aria-label="India risk map by state"
-            className="block size-full bg-[#d4dadc] dark:bg-[#2C353C]"
-            role="img"
-            viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-            preserveAspectRatio="xMidYMid meet"
+            className="block size-full"
+            width={1000}
+            height={520}
+            projection="geoMercator"
+            projectionConfig={{ center: MAP_CENTER, scale: MAP_SCALE }}
           >
-            <rect height={HEIGHT} width={WIDTH} className="fill-[#d4dadc] dark:fill-[#2C353C]" />
-            {STATE_FEATURES.map((feature) => {
-              const name = feature.properties.name;
-              const counts = byState.get(name);
-              const d = path(feature as GeoPermissibleObjects) ?? undefined;
-              if (!counts) {
-                return (
-                  <path key={name} d={d} className="fill-muted stroke-border" strokeWidth={0.8}>
-                    <title>{`${name} · no demo works`}</title>
-                  </path>
-                );
-              }
-              const isSelected = selected === name;
-              return (
-                <a
-                  key={name}
-                  href={isSelected ? "?" : `?state=${encodeURIComponent(name)}`}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    onSelect(isSelected ? "" : name);
-                  }}
-                  aria-label={`${name} · ${counts.works} works · ${counts.high} high-risk`}
-                >
-                  <path
-                    d={d}
-                    className={`${fillFor(counts.high)} stroke-border ${isSelected ? "stroke-primary" : ""}`}
-                    strokeWidth={isSelected ? 2 : 0.8}
-                  >
-                    <title>{`${name} · ${counts.works} works · ${counts.high} high-risk`}</title>
-                  </path>
-                </a>
-              );
-            })}
-          </svg>
+            <Sphere className="fill-[#d4dadc] dark:fill-[#2C353C]" />
+            <ZoomableGroup center={MAP_CENTER} zoom={1} minZoom={1} maxZoom={4}>
+              <Geographies geography={INDIA_GEO}>
+                {({ geographies }) =>
+                  geographies.map((geo) => {
+                    const name = (geo.properties as { name?: string } | null)?.name ?? "Unknown";
+                    const counts = byState.get(name);
+                    const isSelected = selected === name;
+                    return (
+                      <Geography
+                        key={name}
+                        geography={geo}
+                        onClick={() => onSelect(isSelected ? "" : name)}
+                        onMouseEnter={(event) => {
+                          setHover({
+                            text: counts
+                              ? `${name} · ${counts.works} works · ${counts.high} high-risk`
+                              : `${name} · no demo works`,
+                            x: event.clientX,
+                            y: event.clientY,
+                          });
+                        }}
+                        onMouseLeave={() => setHover(null)}
+                        style={{
+                          default: { fill: fillFor(counts?.high ?? 0), outline: "none" },
+                          hover: { fill: "color-mix(in oklch, var(--primary) 25%, transparent)", outline: "none" },
+                          pressed: { outline: "none" },
+                        }}
+                        stroke={isSelected ? "var(--primary)" : "var(--border)"}
+                        strokeWidth={isSelected ? 1.5 : 0.5}
+                      />
+                    );
+                  })
+                }
+              </Geographies>
+            </ZoomableGroup>
+          </ComposableMap>
+          {hover && (
+            <div
+              className="pointer-events-none fixed z-50 rounded-md bg-foreground px-3 py-1.5 text-background text-xs"
+              style={{ left: hover.x + 12, top: hover.y + 12 }}
+            >
+              {hover.text}
+            </div>
+          )}
           <div className="absolute bottom-2 left-2 flex items-center gap-3 rounded-md border bg-card/90 px-2.5 py-1.5 text-muted-foreground text-xs">
             <span className="flex items-center gap-1.5">
               <span className="size-3 rounded-sm border bg-muted" />

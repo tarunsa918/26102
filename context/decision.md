@@ -35,6 +35,7 @@
 
 | ID | Date | Decision | Status | Affects |
 |----|------|----------|--------|---------|
+| ADR-011 | 2026-09-07 | Blank-map root cause: wrongly-wound fit bbox → world-scale projection; adopted React-19-native simple-maps fork with verified fit | Accepted | overview india-risk-map, package.json |
 | ADR-010 | 2026-09-07 | SPEC 02 polish: ministry-first default, CRM outline badges, visible map error+retry | Accepted | role store, overview components |
 | ADR-009 | 2026-09-07 | SPEC 02: vendored 2015-vintage states GeoJSON (slimmed, GeoJSON not TopoJSON), plain-Table queue, SVG-anchor map selection, Bhopal scope | Accepted | dashboard/overview, public/geo, role store |
 | ADR-008 | 2026-09-07 | SPEC 01: overview under dashboard shell, interim stub, validation kept, standalone role store on existing cookie fns | Accepted | dashboard routes, header, src/stores/role/ |
@@ -64,6 +65,16 @@
 ---
 
 ## Decision Entries
+
+### ADR-011: Blank map was a wrong-winding fit bbox; now on react19-simple-maps
+- **Date**: 2026-09-07
+- **Status**: Accepted
+- **Context**: Risk map rendered empty across three implementations. Headless d3 probing pinned it: my hand-made India bbox ring was wound opposite to d3-geo's expectation, so `fitExtent` measured the world-minus-India complement and set scale ≈60 instead of ≈680 — the whole country rendered ~30px wide (invisible speck). Data, fetch/import, and fills were all innocent.
+- **Options considered**: `react-simple-maps@3` (rejected — React 18-only peer vs repo React 19, no `--force`); hand-rolled d3 with corrected fit (rejected — user asked for a real map library, and manual projection math already burned us once); `@vnedyalk0v/react19-simple-maps@2.0.10` (chosen — React-19-native simple-maps fork, 21k weekly downloads, GeoJSON-object input so no fetch layer, ZoomableGroup for the requested pan/zoom, Sphere for ocean).
+- **Decision**: `IndiaRiskMap` rebuilt on the fork (`ComposableMap` geoMercator scale 680.42 center [82.06, 21.85] — numbers extracted from a verified d3 fit, not guessed); fills via inline `var()`/`color-mix` (dark-mode correct, zero Tailwind-generation dependence); hover via cursor-anchored HTML readout; states without demo data get native `<title>`.
+- **Why**: Library owns projection/path/event wiring (the exact layers that failed silently); verified numbers, not hoped-for ones; pan/zoom included per request.
+- **Consequences**: One new dependency (0 vulnerabilities at install); `d3-geo`/`topojson-client` stay for the logistics donor; if the map is STILL blank after this, the cause is environmental (stale branch/server/cache), not code — verify via KPI badge style (outline = new code running).
+- **Affects**: `dashboard/overview/-components/india-risk-map.tsx`, `package.json`
 
 ### ADR-010: SPEC 02 polish — ministry-first default, outline badges, visible map errors
 - **Date**: 2026-09-07
