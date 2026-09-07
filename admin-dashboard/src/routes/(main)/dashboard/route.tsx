@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router";
 
 import { cn } from "cn";
 
@@ -16,6 +16,7 @@ import { LayoutControls } from "./-components/header/layout-controls";
 import { RoleSwitcher } from "./-components/header/role-switcher";
 import { SearchDialog } from "./-components/header/search-dialog";
 import { ThemeSwitcher } from "./-components/header/theme-switcher";
+import { PageAssistant, resolvePageContext } from "./-components/page-assistant";
 import { AppSidebar } from "./-components/sidebar/app-sidebar";
 
 export const Route = createFileRoute("/(main)/dashboard")({
@@ -28,6 +29,8 @@ export const Route = createFileRoute("/(main)/dashboard")({
 
 function DashboardLayout() {
   const { defaultOpen, variant, collapsible, role } = Route.useLoaderData();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const assistant = resolvePageContext(pathname);
 
   return (
     <SidebarProvider
@@ -79,6 +82,12 @@ function DashboardLayout() {
           <Outlet />
         </div>
       </SidebarInset>
+      <PageAssistant
+        contextTitle={assistant.contextTitle}
+        summary={assistant.summary}
+        chips={assistant.chips}
+        answer={assistant.answer}
+      />
     </SidebarProvider>
   );
 }
