@@ -1,77 +1,123 @@
-import {
-  Banknote,
-  ChevronRight,
-  Droplet,
-  History,
-  Lightbulb,
-  MoreHorizontal,
-  QrCode,
-  SendHorizontal,
-  Smartphone,
-} from "lucide-react";
+import { useState } from "react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Link } from "@tanstack/react-router";
+
+import { ClipboardList, Flame, Landmark, LayoutGrid, Map as MapIcon, MapPin, Star, Wallet } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/components/ui/input-group";
+import { toast } from "@/components/ui/toast";
 
-const contacts = [
-  { id: 1, initials: "AR" },
-  { id: 2, initials: "SC" },
-  { id: 3, initials: "MJ" },
-  { id: 4, initials: "ED" },
-];
+const queueSearch = { lens: "all", state: "", district: "", type: "", q: "" } as const;
 
 const shortcuts = [
-  { id: 1, label: "Scan QR", icon: QrCode },
-  { id: 2, label: "Transfer", icon: SendHorizontal },
-  { id: 3, label: "Pay Bills", icon: Banknote },
-  { id: 4, label: "History", icon: History },
-  { id: 5, label: "Mobile", icon: Smartphone },
-  { id: 6, label: "Electricity", icon: Lightbulb },
-  { id: 7, label: "Water", icon: Droplet },
-  { id: 8, label: "More", icon: MoreHorizontal },
-];
+  { id: 1, label: "All works", icon: LayoutGrid, to: "/dashboard/works", search: queueSearch },
+  {
+    id: 2,
+    label: "Needs review",
+    icon: ClipboardList,
+    to: "/dashboard/works",
+    search: { ...queueSearch, lens: "needs-review" },
+  },
+  {
+    id: 3,
+    label: "High-risk",
+    icon: Flame,
+    to: "/dashboard/works",
+    search: { ...queueSearch, lens: "high-risk" },
+  },
+  {
+    id: 4,
+    label: "Flagship W-1014",
+    icon: Star,
+    to: "/dashboard/works/$workId",
+    params: { workId: "W-1014" },
+    search: { tab: "overview", view: "grid", lens: "all", state: "", district: "", type: "", q: "" },
+  },
+  { id: 5, label: "Overview", icon: MapIcon, to: "/dashboard/overview", search: undefined },
+  {
+    id: 6,
+    label: "Bhopal works",
+    icon: MapPin,
+    to: "/dashboard/works",
+    search: { ...queueSearch, state: "Madhya Pradesh", district: "Bhopal" },
+  },
+  {
+    id: 7,
+    label: "Assam works",
+    icon: Wallet,
+    to: "/dashboard/works",
+    search: { ...queueSearch, state: "Assam" },
+  },
+  {
+    id: 8,
+    label: "Rajasthan works",
+    icon: Landmark,
+    to: "/dashboard/works",
+    search: { ...queueSearch, state: "Rajasthan" },
+  },
+] as const;
+
+function shortcutLink(shortcut: (typeof shortcuts)[number]) {
+  if ("params" in shortcut) {
+    return <Link to={shortcut.to} params={shortcut.params} search={shortcut.search} aria-label={shortcut.label} />;
+  }
+  if (shortcut.search) {
+    return <Link to={shortcut.to} search={shortcut.search} aria-label={shortcut.label} />;
+  }
+  return <Link to={shortcut.to} aria-label={shortcut.label} />;
+}
 
 export function QuickActions() {
+  const [amount, setAmount] = useState("");
+
+  const sendNote = () => {
+    const value = Number(amount);
+    if (!amount.trim() || Number.isNaN(value) || value <= 0) {
+      toast.add({ title: "Enter an amount", description: "Type a release amount in lakh first (demo only)." });
+      return;
+    }
+    toast.add({
+      title: "Demo only — no transfer made",
+      description: `₹${value.toFixed(1)}L noted. Real releases are recorded in eSAKSHI, not here.`,
+    });
+    setAmount("");
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <Card>
         <CardHeader>
           <CardTitle className="font-normal">Quick Transfer</CardTitle>
-          <CardAction>
-            <div className="flex items-center gap-1">
-              <div className="flex -space-x-2">
-                {contacts.map((contact) => (
-                  <Avatar key={contact.id} className="size-7 border-2 border-background">
-                    <AvatarFallback className="text-[10px]">{contact.initials}</AvatarFallback>
-                  </Avatar>
-                ))}
-              </div>
-              <ChevronRight className="size-4" />
-            </div>
-          </CardAction>
         </CardHeader>
         <CardContent>
           <Field orientation="horizontal">
             <InputGroup>
               <InputGroupAddon>
-                <InputGroupText>$</InputGroupText>
+                <InputGroupText>₹</InputGroupText>
               </InputGroupAddon>
-              <InputGroupInput placeholder="0.00" />
+              <InputGroupInput
+                inputMode="decimal"
+                placeholder="0.0"
+                value={amount}
+                onChange={(event) => setAmount(event.target.value)}
+                aria-label="Release amount in lakh"
+              />
               <InputGroupAddon align="inline-end">
-                <InputGroupText>USD</InputGroupText>
+                <InputGroupText>Lakh</InputGroupText>
               </InputGroupAddon>
             </InputGroup>
-            <Button>Send</Button>
+            <Button onClick={sendNote}>Send</Button>
           </Field>
+          <p className="pt-2 text-muted-foreground text-xs">Demo only — no money moves here.</p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="font-normal">Shortcuts</CardTitle>
+          <CardTitle className="font-normal">Scheme shortcuts</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-4 gap-4">
@@ -79,7 +125,12 @@ export function QuickActions() {
               const Icon = shortcut.icon;
               return (
                 <div key={shortcut.id} className="flex flex-col items-center gap-2.5">
-                  <Button variant="outline" className="size-12 rounded-full">
+                  <Button
+                    variant="outline"
+                    className="size-12 rounded-full [&_a]:flex [&_a]:size-full [&_a]:items-center [&_a]:justify-center"
+                    nativeButton={false}
+                    render={shortcutLink(shortcut)}
+                  >
                     <Icon className="size-5" />
                   </Button>
                   <span className="text-center text-muted-foreground text-xs">{shortcut.label}</span>

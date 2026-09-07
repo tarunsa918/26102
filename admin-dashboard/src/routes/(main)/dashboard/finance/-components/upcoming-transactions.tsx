@@ -1,68 +1,73 @@
-import { addDays, format, set } from "date-fns";
-import { ChevronRight, Zap } from "lucide-react";
-import { siClaude, siLinear, siResend } from "simple-icons";
+import { Link } from "@tanstack/react-router";
 
-import { SimpleIcon } from "@/components/simple-icon";
+import { ChevronRight, Landmark, Zap } from "lucide-react";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item";
+import { formatLakh, formatWorkDate, works } from "@/lib/mplads-mock";
 
-const transactions = [
-  {
-    id: 1,
-    title: "Claude Pro Subscription",
-    date: format(set(addDays(new Date(), 2), { hours: 14, minutes: 45 }), "hh.mm a '•' MMMM dd, yyyy"),
-    icon: siClaude,
-  },
-  {
-    id: 2,
-    title: "Resend Pro Team",
-    date: format(set(addDays(new Date(), 4), { hours: 7, minutes: 0 }), "hh.mm a '•' MMMM dd, yyyy"),
-    icon: siResend,
-  },
-  {
-    id: 3,
-    title: "Linear Plus Plan",
-    date: format(set(addDays(new Date(), 10), { hours: 7, minutes: 0 }), "hh.mm a '•' MMMM dd, yyyy"),
-    icon: siLinear,
-  },
-];
+const topBalances = [...works]
+  .map((w) => ({ work: w, balance: w.sanctionedLakh - w.expenditureLakh }))
+  .sort((a, b) => b.balance - a.balance)
+  .slice(0, 5);
+
+const heldTotal = topBalances.reduce((total, entry) => total + entry.balance, 0);
+
+const earliestDue = [...topBalances].sort((a, b) => (a.work.dueDate < b.work.dueDate ? -1 : 1))[0];
 
 export function UpcomingTransactions() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-normal">Upcoming Bills & Payments</CardTitle>
+        <CardTitle className="font-normal">Largest unspent balances</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1">
-            <h2 className="flex items-baseline text-3xl leading-none tracking-tight">
-              <span className="font-normal">$1,245</span>
-              <span className="text-muted-foreground text-xl">.00</span>
+            <h2 className="flex items-baseline text-3xl tabular-nums leading-none tracking-tight">
+              <span className="font-normal">{formatLakh(heldTotal)}</span>
             </h2>
             <p className="text-muted-foreground text-sm leading-none">
-              You have <span className="font-medium text-foreground">3</span> bills due this month
+              held by <span className="font-medium text-foreground">{topBalances.length}</span> works · demo sample
             </p>
           </div>
           <div className="flex w-max items-center gap-2 rounded-md border border-border bg-muted/70 px-2 py-1.5 text-sm">
             <Zap className="size-4 fill-primary text-primary" />
             <span className="text-muted-foreground">
-              Autopay will process <span className="font-medium text-foreground">$145.00</span> today
+              Earliest due{" "}
+              <span className="font-medium text-foreground">
+                {earliestDue.work.id} · {formatWorkDate(earliestDue.work.dueDate)}
+              </span>
             </span>
           </div>
         </div>
 
         <ItemGroup>
-          {transactions.map((transaction) => (
-            <Item key={transaction.id} variant="outline" size="xs">
+          {topBalances.map(({ work, balance }) => (
+            <Item
+              key={work.id}
+              variant="outline"
+              size="xs"
+              render={
+                <Link
+                  to="/dashboard/works/$workId"
+                  params={{ workId: work.id }}
+                  search={{ tab: "overview", view: "grid", lens: "all", state: "", district: "", type: "", q: "" }}
+                />
+              }
+            >
               <ItemMedia>
                 <div className="grid size-9 place-items-center rounded-md border bg-background">
-                  <SimpleIcon icon={transaction.icon} />
+                  <Landmark className="size-4" />
                 </div>
               </ItemMedia>
               <ItemContent>
-                <ItemTitle>{transaction.title}</ItemTitle>
-                <ItemDescription>{transaction.date}</ItemDescription>
+                <ItemTitle>
+                  {work.id} · {formatLakh(balance)} unspent
+                </ItemTitle>
+                <ItemDescription>
+                  {work.title} • due {formatWorkDate(work.dueDate)}
+                </ItemDescription>
               </ItemContent>
               <ItemActions>
                 <ChevronRight className="size-5 text-muted-foreground" />

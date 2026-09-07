@@ -1,76 +1,55 @@
-import { siBarclays, siBitcoin, siEthereum, siHsbc, siRevolut } from "simple-icons";
+import { MapPin } from "lucide-react";
 
-import { SimpleIcon } from "@/components/simple-icon";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { formatLakh, works } from "@/lib/mplads-mock";
 
-const walletCards = [
-  {
-    id: 1,
-    bank: "Revolut Premium",
-    last4: "4182",
-    balance: "$12,450.60",
-    icon: siRevolut,
-    iconColor: "fill-foreground",
-  },
-  {
-    id: 2,
-    bank: "HSBC Bank",
-    last4: "1004",
-    balance: "$3,200.11",
-    icon: siHsbc,
-    iconColor: "fill-foreground",
-  },
+interface StateFunds {
+  state: string;
+  works: number;
+  sanctioned: number;
+  released: number;
+}
 
-  {
-    id: 4,
-    bank: "Barclays Bank",
-    last4: "9912",
-    balance: "$1,450.00",
-    icon: siBarclays,
-    iconColor: "fill-foreground",
-  },
-];
+function stateFunds(): StateFunds[] {
+  const byState = new Map<string, StateFunds>();
+  for (const w of works) {
+    const entry = byState.get(w.state) ?? { state: w.state, works: 0, sanctioned: 0, released: 0 };
+    entry.works += 1;
+    entry.sanctioned += w.sanctionedLakh;
+    entry.released += w.expenditureLakh;
+    byState.set(w.state, entry);
+  }
+  return [...byState.values()].sort((a, b) => b.sanctioned - a.sanctioned);
+}
 
-const cryptoAssets = [
-  {
-    id: 1,
-    name: "Bitcoin",
-    vault: "Binance",
-    balance: "0.42 BTC",
-    usdValue: "$24,150.00",
-    icon: siBitcoin,
-  },
-  {
-    id: 2,
-    name: "Ethereum",
-    vault: "MetaMask",
-    balance: "4.85 ETH",
-    usdValue: "$12,420.10",
-    icon: siEthereum,
-  },
-];
+const ranked = stateFunds();
+const topStates = ranked.slice(0, 3);
+const restStates = ranked.slice(3);
+const stalled = works.filter((w) => w.status === "stalled").length;
 
 export function Wallet() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-normal">Wallet</CardTitle>
+        <CardTitle className="font-normal">Funds by state</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="flex flex-col gap-4">
-          {walletCards.map((card) => (
-            <div key={card.id} className="flex items-center justify-between">
+          {topStates.map((entry) => (
+            <div key={entry.state} className="flex items-center justify-between">
               <div className="flex flex-col gap-0.5">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-foreground text-sm leading-none">
-                    {card.bank} • **** {card.last4}
+                    {entry.state} • {entry.works} works
                   </span>
                 </div>
-                <span className="font-normal text-muted-foreground text-xs">{card.balance}</span>
+                <span className="font-normal text-muted-foreground text-xs tabular-nums">
+                  S {formatLakh(entry.sanctioned)} • R {formatLakh(entry.released)}
+                </span>
               </div>
               <div className="flex size-9 shrink-0 items-center justify-center rounded-md border bg-background">
-                <SimpleIcon icon={card.icon} />
+                <MapPin className="size-4" />
               </div>
             </div>
           ))}
@@ -79,20 +58,20 @@ export function Wallet() {
         <Separator />
 
         <div className="flex flex-col gap-4">
-          {cryptoAssets.map((asset) => (
-            <div key={asset.id} className="flex items-center justify-between">
+          {restStates.map((entry) => (
+            <div key={entry.state} className="flex items-center justify-between">
               <div className="flex flex-col gap-0.5">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-foreground text-sm leading-none">
-                    {asset.name} • {asset.vault}
+                    {entry.state} • {entry.works} works
                   </span>
                 </div>
-                <span className="font-normal text-muted-foreground text-xs">
-                  {asset.balance} • {asset.usdValue}
+                <span className="font-normal text-muted-foreground text-xs tabular-nums">
+                  S {formatLakh(entry.sanctioned)} • R {formatLakh(entry.released)}
                 </span>
               </div>
               <div className="flex size-9 shrink-0 items-center justify-center rounded-md border bg-background">
-                <SimpleIcon icon={asset.icon} />
+                <MapPin className="size-4" />
               </div>
             </div>
           ))}
@@ -101,12 +80,12 @@ export function Wallet() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <span className="font-medium text-[10px] text-muted-foreground">
-              Physical Vault: <span className="text-foreground">Ledger Nano X</span>
+              Demo sample: <span className="text-foreground">{works.length} works · 6 states</span>
             </span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="size-1 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-            <span className="font-bold text-[9px] text-green-500 uppercase tracking-widest">Air-Gapped</span>
+            <div className="size-1 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+            <span className="font-bold text-[9px] text-amber-500 uppercase tracking-widest">{stalled} stalled</span>
           </div>
         </div>
       </CardContent>
