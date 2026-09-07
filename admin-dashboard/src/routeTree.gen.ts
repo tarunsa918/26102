@@ -48,6 +48,7 @@ import { Route as mainDashboardlegacyAnalyticsV1RouteRouteImport } from './route
 import { Route as mainDashboardlegacyCrmV1RouteRouteImport } from './routes/(main)/dashboard/(legacy)/crm-v1/route'
 import { Route as mainDashboardlegacyDefaultV1RouteRouteImport } from './routes/(main)/dashboard/(legacy)/default-v1/route'
 import { Route as mainDashboardlegacyFinanceV1RouteRouteImport } from './routes/(main)/dashboard/(legacy)/finance-v1/route'
+import { Route as mainDashboardWorksWorkIdRouteRouteImport } from './routes/(main)/dashboard/works/$workId/route'
 
 const externalIndexRoute = externalIndexRouteImport.update({
   id: '/(external)/',
@@ -264,6 +265,12 @@ const mainDashboardlegacyFinanceV1RouteRoute =
     path: '/finance-v1',
     getParentRoute: () => mainDashboardRouteRoute,
   } as any)
+const mainDashboardWorksWorkIdRouteRoute =
+  mainDashboardWorksWorkIdRouteRouteImport.update({
+    id: '/$workId',
+    path: '/$workId',
+    getParentRoute: () => mainDashboardWorksRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/chat': typeof mainChatRouteRoute
@@ -294,7 +301,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/roles': typeof mainDashboardRolesRouteRoute
   '/dashboard/tasks': typeof mainDashboardTasksRouteRoute
   '/dashboard/users': typeof mainDashboardUsersRouteRoute
-  '/dashboard/works': typeof mainDashboardWorksRouteRoute
+  '/dashboard/works': typeof mainDashboardWorksRouteRouteWithChildren
   '/dashboard/$': typeof mainDashboardSplatRoute
   '/dashboard/': typeof mainDashboardIndexRoute
   '/auth/v1/login': typeof mainAuthV1LoginRouteRoute
@@ -305,6 +312,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/crm-v1': typeof mainDashboardlegacyCrmV1RouteRoute
   '/dashboard/default-v1': typeof mainDashboardlegacyDefaultV1RouteRoute
   '/dashboard/finance-v1': typeof mainDashboardlegacyFinanceV1RouteRoute
+  '/dashboard/works/$workId': typeof mainDashboardWorksWorkIdRouteRoute
 }
 export interface FileRoutesByTo {
   '/chat': typeof mainChatRouteRoute
@@ -334,7 +342,7 @@ export interface FileRoutesByTo {
   '/dashboard/roles': typeof mainDashboardRolesRouteRoute
   '/dashboard/tasks': typeof mainDashboardTasksRouteRoute
   '/dashboard/users': typeof mainDashboardUsersRouteRoute
-  '/dashboard/works': typeof mainDashboardWorksRouteRoute
+  '/dashboard/works': typeof mainDashboardWorksRouteRouteWithChildren
   '/dashboard/$': typeof mainDashboardSplatRoute
   '/dashboard': typeof mainDashboardIndexRoute
   '/auth/v1/login': typeof mainAuthV1LoginRouteRoute
@@ -345,6 +353,7 @@ export interface FileRoutesByTo {
   '/dashboard/crm-v1': typeof mainDashboardlegacyCrmV1RouteRoute
   '/dashboard/default-v1': typeof mainDashboardlegacyDefaultV1RouteRoute
   '/dashboard/finance-v1': typeof mainDashboardlegacyFinanceV1RouteRoute
+  '/dashboard/works/$workId': typeof mainDashboardWorksWorkIdRouteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -376,7 +385,7 @@ export interface FileRoutesById {
   '/(main)/dashboard/roles': typeof mainDashboardRolesRouteRoute
   '/(main)/dashboard/tasks': typeof mainDashboardTasksRouteRoute
   '/(main)/dashboard/users': typeof mainDashboardUsersRouteRoute
-  '/(main)/dashboard/works': typeof mainDashboardWorksRouteRoute
+  '/(main)/dashboard/works': typeof mainDashboardWorksRouteRouteWithChildren
   '/(main)/dashboard/$': typeof mainDashboardSplatRoute
   '/(main)/dashboard/': typeof mainDashboardIndexRoute
   '/(main)/auth/v1/login': typeof mainAuthV1LoginRouteRoute
@@ -387,6 +396,7 @@ export interface FileRoutesById {
   '/(main)/dashboard/(legacy)/crm-v1': typeof mainDashboardlegacyCrmV1RouteRoute
   '/(main)/dashboard/(legacy)/default-v1': typeof mainDashboardlegacyDefaultV1RouteRoute
   '/(main)/dashboard/(legacy)/finance-v1': typeof mainDashboardlegacyFinanceV1RouteRoute
+  '/(main)/dashboard/works/$workId': typeof mainDashboardWorksWorkIdRouteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -430,6 +440,7 @@ export interface FileRouteTypes {
     | '/dashboard/crm-v1'
     | '/dashboard/default-v1'
     | '/dashboard/finance-v1'
+    | '/dashboard/works/$workId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/chat'
@@ -470,6 +481,7 @@ export interface FileRouteTypes {
     | '/dashboard/crm-v1'
     | '/dashboard/default-v1'
     | '/dashboard/finance-v1'
+    | '/dashboard/works/$workId'
   id:
     | '__root__'
     | '/(main)/chat'
@@ -511,6 +523,7 @@ export interface FileRouteTypes {
     | '/(main)/dashboard/(legacy)/crm-v1'
     | '/(main)/dashboard/(legacy)/default-v1'
     | '/(main)/dashboard/(legacy)/finance-v1'
+    | '/(main)/dashboard/works/$workId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -799,8 +812,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardlegacyFinanceV1RouteRouteImport
       parentRoute: typeof mainDashboardRouteRoute
     }
+    '/(main)/dashboard/works/$workId': {
+      id: '/(main)/dashboard/works/$workId'
+      path: '/$workId'
+      fullPath: '/dashboard/works/$workId'
+      preLoaderRoute: typeof mainDashboardWorksWorkIdRouteRouteImport
+      parentRoute: typeof mainDashboardWorksRouteRoute
+    }
   }
 }
+
+interface mainDashboardWorksRouteRouteChildren {
+  mainDashboardWorksWorkIdRouteRoute: typeof mainDashboardWorksWorkIdRouteRoute
+}
+
+const mainDashboardWorksRouteRouteChildren: mainDashboardWorksRouteRouteChildren =
+  {
+    mainDashboardWorksWorkIdRouteRoute: mainDashboardWorksWorkIdRouteRoute,
+  }
+
+const mainDashboardWorksRouteRouteWithChildren =
+  mainDashboardWorksRouteRoute._addFileChildren(
+    mainDashboardWorksRouteRouteChildren,
+  )
 
 interface mainDashboardRouteRouteChildren {
   mainDashboardAcademyRouteRoute: typeof mainDashboardAcademyRouteRoute
@@ -825,7 +859,7 @@ interface mainDashboardRouteRouteChildren {
   mainDashboardRolesRouteRoute: typeof mainDashboardRolesRouteRoute
   mainDashboardTasksRouteRoute: typeof mainDashboardTasksRouteRoute
   mainDashboardUsersRouteRoute: typeof mainDashboardUsersRouteRoute
-  mainDashboardWorksRouteRoute: typeof mainDashboardWorksRouteRoute
+  mainDashboardWorksRouteRoute: typeof mainDashboardWorksRouteRouteWithChildren
   mainDashboardSplatRoute: typeof mainDashboardSplatRoute
   mainDashboardIndexRoute: typeof mainDashboardIndexRoute
   mainDashboardlegacyAnalyticsV1RouteRoute: typeof mainDashboardlegacyAnalyticsV1RouteRoute
@@ -858,7 +892,7 @@ const mainDashboardRouteRouteChildren: mainDashboardRouteRouteChildren = {
   mainDashboardRolesRouteRoute: mainDashboardRolesRouteRoute,
   mainDashboardTasksRouteRoute: mainDashboardTasksRouteRoute,
   mainDashboardUsersRouteRoute: mainDashboardUsersRouteRoute,
-  mainDashboardWorksRouteRoute: mainDashboardWorksRouteRoute,
+  mainDashboardWorksRouteRoute: mainDashboardWorksRouteRouteWithChildren,
   mainDashboardSplatRoute: mainDashboardSplatRoute,
   mainDashboardIndexRoute: mainDashboardIndexRoute,
   mainDashboardlegacyAnalyticsV1RouteRoute:

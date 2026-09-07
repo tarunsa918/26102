@@ -1,5 +1,6 @@
 import * as React from "react";
 
+import { useNavigate } from "@tanstack/react-router";
 import {
   type ColumnFiltersState,
   type ColumnVisibilityState,
@@ -28,7 +29,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { dataTableFeatures } from "@/lib/data-table-features";
 
 import { columns } from "./columns";
-import { DISTRICT_OPTIONS, type Lens, STATE_OPTIONS, TYPE_OPTIONS, type WorkRow } from "./data";
+import { DISTRICT_OPTIONS, DOSSIER_ENTRY_SEARCH, type Lens, STATE_OPTIONS, TYPE_OPTIONS, type WorkRow } from "./data";
 import { WorksToolbar } from "./works-toolbar";
 
 function preventPaginationNavigation(event: React.MouseEvent<HTMLAnchorElement>) {
@@ -64,6 +65,7 @@ interface WorksTableProps {
 }
 
 export function WorksTable({ data, total, search, lensCounts, resetKey, onSearchPatch, onResetAll }: WorksTableProps) {
+  const navigate = useNavigate();
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] = React.useState<ColumnVisibilityState>({
     state: false,
@@ -98,6 +100,22 @@ export function WorksTable({ data, total, search, lensCounts, resetKey, onSearch
   });
 
   const initialReset = React.useRef(resetKey);
+
+  function openDossier(workId: string) {
+    void navigate({
+      to: "/dashboard/works/$workId",
+      params: { workId },
+      search: { ...DOSSIER_ENTRY_SEARCH },
+    });
+  }
+
+  function handleRowClick(event: React.MouseEvent, workId: string) {
+    const target = event.target as HTMLElement;
+    if (target.closest("a, button, input, select, textarea")) {
+      return;
+    }
+    openDossier(workId);
+  }
 
   React.useEffect(() => {
     table.getColumn("state")?.setFilterValue(search.state || undefined);
@@ -255,8 +273,9 @@ export function WorksTable({ data, total, search, lensCounts, resetKey, onSearch
                 {table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    className="border-border/60 hover:bg-muted/20"
+                    className="cursor-pointer border-border/60 hover:bg-muted/20"
                     data-state={table.state.rowSelection[row.id] && "selected"}
+                    onClick={(event) => handleRowClick(event, row.original.id)}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id} className="py-3 align-middle">

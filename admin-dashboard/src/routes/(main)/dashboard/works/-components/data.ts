@@ -92,3 +92,13 @@ export const STATE_OPTIONS = [...new Set(works.map((work) => work.state))].sort(
 export const DISTRICT_OPTIONS = [...new Set(works.map((work) => work.district))].sort((a, b) => a.localeCompare(b));
 
 export const TYPE_OPTIONS = [...new Set(works.map((work) => work.type))].sort((a, b) => a.localeCompare(b));
+
+export const DOSSIER_ENTRY_SEARCH = {
+  tab: "anomalies",
+  view: "grid",
+  lens: "all",
+  state: "",
+  district: "",
+  type: "",
+  q: "",
+} as const;

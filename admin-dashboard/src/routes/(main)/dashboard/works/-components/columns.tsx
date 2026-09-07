@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import type { Column, ColumnDef } from "@tanstack/react-table";
 import { Subscribe } from "@tanstack/react-table";
 
@@ -30,7 +31,7 @@ import { toast } from "@/components/ui/toast";
 import type { DataTableFeatures } from "@/lib/data-table-features";
 import { formatLakh, formatWorkDate, stallLabel } from "@/lib/mplads-mock";
 
-import type { RowSeverity, WorkRow } from "./data";
+import { DOSSIER_ENTRY_SEARCH, type RowSeverity, type WorkRow } from "./data";
 
 const TYPE_ICONS = {
   road: Route,
@@ -161,7 +162,14 @@ export const columns: ColumnDef<DataTableFeatures, WorkRow>[] = [
             <Icon className="size-4" />
           </span>
           <div className="min-w-0">
-            <div className="truncate font-medium text-sm">{row.getValue("title")}</div>
+            <Link
+              className="hover:underline"
+              to="/dashboard/works/$workId"
+              params={{ workId: row.original.id }}
+              search={{ ...DOSSIER_ENTRY_SEARCH }}
+            >
+              <span className="block truncate font-medium text-sm">{row.getValue("title")}</span>
+            </Link>
             <div className="truncate text-muted-foreground text-xs">{row.original.agency}</div>
           </div>
         </div>
@@ -283,7 +291,15 @@ export const columns: ColumnDef<DataTableFeatures, WorkRow>[] = [
             <span className="sr-only">Open menu</span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuItem render={<a href={`/dashboard/works/${row.original.id}`} />}>
+            <DropdownMenuItem
+              render={
+                <Link
+                  to="/dashboard/works/$workId"
+                  params={{ workId: row.original.id }}
+                  search={{ ...DOSSIER_ENTRY_SEARCH }}
+                />
+              }
+            >
               Open dossier
             </DropdownMenuItem>
             <DropdownMenuItem

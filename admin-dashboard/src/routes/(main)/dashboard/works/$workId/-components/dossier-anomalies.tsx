@@ -1,0 +1,187 @@
+import { ArrowLeftRight, Clock, FileText, Sparkles, Wallet } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { compareSentence, formatLakh } from "@/lib/mplads-mock";
+import type { Anomaly, Work } from "@/lib/mplads-schema";
+
+import { type DossierTab, SEVERITY_BAR, SEVERITY_DOT, SEVERITY_STYLES, TYPE_LABELS } from "./dossier-data";
+
+interface DossierAnomaliesProps {
+  work: Work;
+  flags: Anomaly[];
+  onGoTab: (tab: DossierTab) => void;
+  onAskAI: (question: string, flag: Anomaly) => void;
+}
+
+const KIND_LABELS: Record<Anomaly["kind"], string> = {
+  cost: "Cost",
+  delay: "Delay",
+  duplicate: "Duplicate",
+  expenditure: "Expenditure",
+  utilisation: "Utilisation",
+};
+
+const AI_SENTENCES: Record<Anomaly["kind"], string> = {
+  cost: "Warrants manual review — sanctioned cost is far above peers and execution has stalled.",
+  delay: "Warrants manual review — the site has gone quiet past the review threshold.",
+  duplicate: "Warrants manual review — scope may overlap a nearby sanctioned work.",
+  expenditure: "Warrants manual review — funds are releasing faster than physical progress.",
+  utilisation: "Warrants manual review — utilisation trails peers with the certificate pending.",
+};
+
+const SEVERITY_BORDER: Record<Anomaly["severity"], string> = {
+  high: "border-l-destructive",
+  low: "border-l-sky-500",
+  medium: "border-l-amber-500",
+};
+
+function signalIcon(label: string) {
+  if (/stall|update|duration|due/i.test(label)) {
+    return Clock;
+  }
+  if (/peer|median|duplicate/i.test(label)) {
+    return ArrowLeftRight;
+  }
+  if (/spend|progress|release|sanction/i.test(label)) {
+    return Wallet;
+  }
+  return FileText;
+}
+
+function PeerBar({ actual, median, severity }: { actual: number; median: number; severity: Anomaly["severity"] }) {
+  const max = Math.max(actual, median, 1) * 1.1;
+  return (
+    <div className="flex flex-col gap-1">
+      <div
+        className="relative h-3 rounded-full bg-muted"
+        role="img"
+        aria-label={`Actual ${formatLakh(actual)} against peer median ${formatLakh(median)}`}
+      >
+        <div
+          className={`h-full rounded-full ${SEVERITY_BAR[severity]}`}
+          style={{ width: `${(actual / max) * 100}%` }}
+        />
+        <div
+          aria-hidden="true"
+          className="absolute top-[-3px] h-[18px] w-1 rounded-full bg-foreground"
+          style={{ left: `calc(${(median / max) * 100}% - 2px)` }}
+        />
+      </div>
+      <div className="flex justify-between text-muted-foreground text-xs">
+        <span>
+          Peer median <span className="font-medium text-foreground tabular-nums">{formatLakh(median)}</span>
+        </span>
+        <span>
+          This work <span className="font-medium text-foreground tabular-nums">{formatLakh(actual)}</span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+export function DossierAnomalies({ work, flags, onGoTab, onAskAI }: DossierAnomaliesProps) {
+  if (flags.length === 0) {
+    return (
+      <div className="py-4">
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>No open flags</EmptyTitle>
+            <EmptyDescription>Sentinel found no anomalies for this work in the demo dataset.</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4 py-4">
+      {flags.map((flag) => {
+        const hasNumbers = flag.actualLakh !== null && flag.peerMedianLakh !== null;
+        return (
+          <Card key={flag.id} className={`border-l-4 ${SEVERITY_BORDER[flag.severity]}`}>
+            <CardHeader>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge
+                  className={`gap-1.5 rounded-sm border font-medium capitalize ${SEVERITY_STYLES[flag.severity]}`}
+                  variant="outline"
+                >
+                  <span className={`size-1.5 rounded-full ${SEVERITY_DOT[flag.severity]}`} />
+                  {flag.severity}
+                </Badge>
+                <Badge className="rounded-sm" variant="outline">
+                  {KIND_LABELS[flag.kind]}
+                </Badge>
+              </div>
+              <CardTitle className="text-base">{flag.headline}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3 rounded-lg bg-muted/50 p-4">
+                {hasNumbers && (
+                  <>
+                    <p className="text-2xl tabular-nums">
+                      <span className={flag.severity === "high" ? "text-destructive" : "text-foreground"}>
+                        {formatLakh(flag.actualLakh as number)}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {" "}
+                        vs {formatLakh(flag.peerMedianLakh as number)} median
+                      </span>
+                    </p>
+                    <p className="text-muted-foreground text-sm">
+                      {compareSentence(
+                        flag.actualLakh as number,
+                        flag.peerMedianLakh as number,
+                        flag.peerN,
+                        work.type,
+                        work.district,
+                      )}
+                    </p>
+                    <PeerBar
+                      actual={flag.actualLakh as number}
+                      median={flag.peerMedianLakh as number}
+                      severity={flag.severity}
+                    />
+                  </>
+                )}
+                <div className="flex flex-col gap-2">
+                  {flag.signals.map((signal) => {
+                    const Icon = signalIcon(signal.label);
+                    return (
+                      <div key={signal.label} className="flex items-start gap-2 text-sm">
+                        <Icon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                        <p>
+                          <span className="text-muted-foreground">{signal.label}: </span>
+                          {signal.value}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-muted-foreground text-sm">{AI_SENTENCES[flag.kind]}</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button size="sm" variant="outline" onClick={() => onGoTab("financials")}>
+                  Compare peers
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => onGoTab("evidence")}>
+                  View evidence
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => onAskAI("Why was this flagged?", flag)}>
+                  <Sparkles data-icon="inline-start" />
+                  Ask AI
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
+      <p className="text-muted-foreground text-xs">
+        Flags mean “needs review,” never fraud · peer groups are {TYPE_LABELS[work.type].toLowerCase()} works in{" "}
+        {work.district}.
+      </p>
+    </div>
+  );
+}

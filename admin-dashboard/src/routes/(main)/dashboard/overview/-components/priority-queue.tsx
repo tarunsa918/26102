@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
 
 import { Badge } from "@/components/ui/badge";
@@ -67,10 +68,15 @@ export function PriorityQueue({ rows }: { readonly rows: ReadonlyArray<QueueRow>
                     </Badge>
                   </TableCell>
                   <TableCell className="py-3 align-middle">
-                    <a className="hover:underline" href={`/dashboard/works/${work.id}`}>
+                    <Link
+                      className="hover:underline"
+                      to="/dashboard/works/$workId"
+                      params={{ workId: work.id }}
+                      search={{ tab: "anomalies", view: "grid", lens: "all", state: "", district: "", type: "", q: "" }}
+                    >
                       <span className="block font-medium text-sm">{work.title}</span>
                       <span className="block font-mono text-muted-foreground text-xs">#{work.id}</span>
-                    </a>
+                    </Link>
                   </TableCell>
                   <TableCell className="max-w-64 truncate py-3 align-middle text-sm">{reason}</TableCell>
                   <TableCell className="py-3 align-middle text-muted-foreground text-sm">{work.district}</TableCell>
