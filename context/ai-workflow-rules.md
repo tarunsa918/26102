@@ -71,8 +71,19 @@ Before implementing any feature, load skills in this order:
 ## Protected Files
 
 Do not modify the following unless explicitly instructed:
-- `src/shared/ui/*` — generated primitives
-- `node_modules/`, `.next/`, build output directories
+- `admin-dashboard/src/components/ui/*` — local shadcn primitives (frozen)
+- `admin-dashboard/src/components/calendar/*` — FullCalendar wrapper (frozen)
+- `admin-dashboard/src/routeTree.gen.ts` — generated router tree
+- `node_modules/`, build output directories
+
+## SIH MVP Rules (prototype-first)
+
+- **Reuse components, never product structure**: clone the closest template screen (`default`/`crm`/`finance`/`chat`/`file-manager`) and adapt; template pages outside the officer loop (ecommerce, academy, logistics, crm-as-CRM…) stay out.
+- **5 routes max** (`/login`, `/overview`, `/works`, `/works/:workId`, `/ai`) — everything else is a component/section/modal.
+- **Mock-data contract**: prototype data lives in `-components/data.ts`, typed by `src/lib/mplads-schema.ts` Zod shapes that mirror future server responses; swapping mock → real must be a one-line change per call site.
+- **Explain every anomaly** in UI copy: peer-group size, median vs actual, ≥1 corroborating signal. Naked risk scores are a defect.
+- **Flags read "needs review"** — never fraud language; anonymize constituencies/people in demo data.
+- **Design source of truth**: `ui-context.md` + the closest existing screen. No new visual languages.
 
 ## Keeping Docs in Sync
 

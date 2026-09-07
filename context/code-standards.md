@@ -1,80 +1,56 @@
-# Code Standards
+# Code Standards (verified against `admin-dashboard/`)
 
 ## General
 
-- Keep components small and single-purpose (max ~300 lines)
-- Fix root causes — do not layer workarounds
-- Do not mix unrelated concerns in one component or route
-- Never use `npm install --force` or `npx install --force` — resolve dependency conflicts properly
-- Never default to a single UI library — mix and match from DESIGN.md
+- Keep components small and single-purpose (~300 lines max); `route.tsx` only composes `-components/`
+- Fix root causes — grep every caller, fix once where all callers route through
+- Never `npm install --force` / `npx install --force`
+- Reuse in-repo patterns before new code: existing screen → stdlib → installed dep → only then new code
 
 ## TypeScript
 
-- Strict mode is required throughout the project
-- Avoid `any` — use explicit interfaces or narrowly scoped types
-- Validate unknown external input at system boundaries
-- Prefer `interface` over `type` for object shapes; use `type` for unions, intersections, and aliases
+- Strict mode; no `any` — precise interfaces (`interface` for objects, `type` for unions/aliases)
+- Validate all client-controlled input with **Zod** at server-function boundaries
+- `@/` import alias everywhere; Biome: double quotes, semicolons, 2-space indent, sorted imports, 120-col width
 
-## Framework
+## TanStack Start (NOT Next.js — no app router, no server components, no `index.ts` public APIs)
 
-- Default to server components — add `'use client'` only when browser interactivity requires it
-- Use framework-native image/image optimization components
-- Keep route handlers focused on a single responsibility
-- Every page gets metadata/SEO (title, description, Open Graph tags)
+- File-based routes in `src/routes/`; `(main)`/`(external)`/`(legacy)` are organizational only; `-`-prefixed files/dirs are route-excluded
+- `route.tsx` per directory creates the route/layout; nested content via `<Outlet />`; `$param.tsx` = dynamic segment
+- **Never edit `src/routeTree.gen.ts`** (generated; `npm run generate-routes`)
+- **Never edit `src/components/ui/*` or `src/components/calendar/*`**
+- SSR by default; browser-only APIs in effects, guarded client code, `<ClientOnly>`, or `createClientOnlyFn`
+- Server work via `createServerFn` in `src/server/` (+ Zod `.validator()`); do not expose raw server imports to client beyond the fn
+- New screen checklist: closest reference screen inspected → `-components/` split → added to `sidebar-items.ts` if navigable → theme-token-only styling → loading/empty/error/disabled/overflow states → a11y (labels, focus, ARIA)
 
-## Frontend — Feature-First Organization
+## Colocation (actual structure — NOT features//shared/)
 
-- **Every feature is a self-contained module** in `src/features/<feature-name>/`
-- Feature modules own: `api/`, `components/`, `hooks/`, `types/`, and `index.ts`
-- **No cross-feature imports** — if two features need shared code, promote to `entities/` or `shared/`
-- **Public API via `index.ts`** — external code imports only from the feature root
-- **`app/` pages are thin composition layers** — they import from features, not contain business logic
-- **`shared/` is business-agnostic** — no feature-specific code
-- **`shared/ui/`** contains primitives (Button, Modal, Input) — no business names
-- **Promote to `shared/` only on second use** — avoid premature abstraction
+- Screen code lives with its route: `src/routes/(main)/dashboard/<screen>/-components/` (+ local `data.ts` for prototype mock data)
+- Shared donors: `src/components/` (ui primitives, date-range-picker), `src/hooks/` (`use-mobile`, `use-lg`), `src/lib/` (utils, preferences, data-table-features), `src/navigation/`, `src/stores/preferences/`
+- Promote to shared only on second use; never import another screen's `-components/`; never use `(legacy)/*` as reference
 
-## Backend — Service-Repository Pattern
+## Data & tables
 
-- **Controllers** handle HTTP: parse request, validate, call service, format response
-- **Services** contain business logic: orchestration, rules, workflows
-- **Repositories** handle data access: DB queries, external API calls
-- **Validators** define request schemas (Zod, Yup)
-- **Middleware** handles cross-cutting concerns: auth, rate limiting, logging
+- Tables: TanStack Table with `columns.tsx` + `schema.ts` (+ Zod) + `table.tsx` + data file — copy `crm/` or `tasks/`
+- Prototype mock data: `-components/data.ts` typed by Zod shapes in `src/lib/mplads-schema.ts` (to create) — identical shape to future server responses so mock→real is a one-line swap
+- Charts: always through `src/components/ui/chart.tsx` (recharts); maps: `shipment-route-map.tsx` SVG pattern (d3-geo + topojson-client)
 
 ## Styling
 
-- Use CSS custom property tokens — no hardcoded color values
-- Follow the design token / spacing scale defined in `ui-context.md`
-- Keep utility classes inline; avoid preprocessor features like `@apply`
+- Semantic tokens only (`bg-card text-muted-foreground border …`); named Tailwind palette only when tokens can't express it; never raw hex/RGB/OKLCH
+- Match nearby screens in density/borders/radius/width; `tabular-nums` for figures
 
 ## Animation
 
-- Animate only `transform` and `opacity` — never layout properties
-- Never animate from `scale(0)` — start from `scale(0.95)` with `opacity: 0`
-- Never use `ease-in` for UI animations — use `ease-out` with custom cubic-bezier
-- UI animations stay under 300ms
-- Respect `prefers-reduced-motion` on every animated element
+- `transform` + `opacity` only, ≤300ms, `ease-out` (never `ease-in`), never from `scale(0)`; `prefers-reduced-motion` respected everywhere
 
-## File Organization
+## Backend (to build)
 
-```
-src/
-├── app/                          # Next.js routes and layouts
-├── features/                     # Feature modules (api/, components/, hooks/, types/, index.ts)
-├── shared/                       # Shared UI, hooks, lib, api client, types
-├── entities/                     # Domain models (user, product, organization)
-├── lib/                          # Infrastructure (api-client, query-client, logger)
-├── config/                       # Runtime config, env vars, constants
-└── styles/                       # Global styles, design tokens
-```
+- `src/server/mplads/*.ts`: `works.list/get`, `anomalies.list`, `evidence.list/upload`, `decisions.record`, `activity.append`, `ai.chat` — each a validated `createServerFn`
+- Anomaly engine + DB choice are open questions (see progress-tracker); prototype runs on bundled mock data behind the same function signatures
 
-## Pre-Commit Checks (Every Feature Unit)
+## Pre-commit checks
 
-1. Lint passes (e.g., `npm run lint`)
-2. Typecheck passes (e.g., `npm run typecheck`)
-3. Build passes (e.g., `npm run build`)
-4. `progress-tracker.md` is updated with completed work
-5. All animations have `prefers-reduced-motion` fallbacks
-6. No hardcoded colors — all values use CSS custom properties
-7. No `components/` dumping ground — code is organized by feature
-8. No cross-feature imports — shared code is properly promoted
+1. `npm run lint` / `check` / `build` pass (run only when user explicitly requests validation)
+2. `progress-tracker.md` (+ `flow.md`/`decision.md` if applicable) updated
+3. No hardcoded colors; motion-safe; no `components/` dumping; colocation respected
