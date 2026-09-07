@@ -242,6 +242,12 @@ function MessageComposer({ placeholder, onSend }: { placeholder: string; onSend?
           name="message"
           placeholder={placeholder}
           className="min-h-14 px-3 py-2.5 text-sm ring-0 focus-visible:ring-0 aria-invalid:ring-0 dark:aria-invalid:ring-0"
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+              event.currentTarget.form?.requestSubmit();
+            }
+          }}
         />
         <InputGroupAddon align="block-end">
           <InputGroupButton aria-label="Format" type="button" size="icon-sm">

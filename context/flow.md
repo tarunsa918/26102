@@ -104,7 +104,7 @@ sequenceDiagram
   ├─ <DecisionBar/>            (Verified/Dismissed/Action Required + notes form)
   └─ <ContextualAI/>           (chat/ donor: bubble thread + tool cards)
 ```
-Extended: tender & execution block (holder/awarder/dept/labour/demanded-vs-elapsed), `WorkLocationMap` (single-pin copy of india-risk-map), spent/balance/returned strip, duplicate overlap verdict. Global `<PageAssistant/>` floating toggle mounted in dashboard shell (page-context scripted answers).
+Extended: KPI strip (sanctioned/spent/progress/stall/flags/labour) + map/tender command row above tabs; tender & execution block (holder/awarder/dept/labour/demanded-vs-elapsed), `WorkLocationMap` (single-pin copy of india-risk-map), spent/balance/returned strip, duplicate overlap verdict, enriched flags (peer table, evidence count, UC status). Inline dossier assistant removed — Ask-AI buttons dispatch `mplads:ask-ai` to the floating page-assistant popover. Global `<PageAssistant/>` floating toggle mounted in dashboard shell (page-context scripted answers).
 
 ### Overview (to build)
 ```

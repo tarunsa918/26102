@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { cn } from "cn";
 import { differenceInCalendarDays } from "date-fns";
-import { Sparkles } from "lucide-react";
+import { Send, Sparkles, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   anomalies,
   compareSentence,
@@ -300,20 +301,60 @@ export function resolvePageContext(pathname: string): PageAssistantProps {
   };
 }
 
-function AiPanel({ summary, chips, answer }: Omit<PageAssistantProps, "contextTitle">) {
-  const [messages, setMessages] = useState<AiMessage[]>([{ id: 0, role: "assistant", text: summary }]);
+const ASSISTANT_STORAGE_KEY = "mplads-assistant-v1";
 
-  useEffect(() => {
-    setMessages([{ id: 0, role: "assistant", text: summary }]);
-  }, [summary]);
+const MAX_STORED = 20;
 
-  function ask(question: string) {
-    const id = Date.now();
-    setMessages((current) => [
-      ...current,
-      { id, role: "user", text: question },
-      { id: id + 1, role: "assistant", text: answer(question) },
-    ]);
+function isAiMessage(item: unknown): item is AiMessage {
+  if (typeof item !== "object" || item === null) {
+    return false;
+  }
+  const record = item as Record<string, unknown>;
+  return (
+    typeof record.id === "number" &&
+    (record.role === "user" || record.role === "assistant") &&
+    typeof record.text === "string"
+  );
+}
+
+function readStored(storageKey: string): AiMessage[] | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    const raw = window.localStorage.getItem(`${ASSISTANT_STORAGE_KEY}:${storageKey}`);
+    if (!raw) {
+      return null;
+    }
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+    const valid = (parsed as unknown[]).filter(isAiMessage);
+    return valid.length > 0 ? valid : null;
+  } catch {
+    return null;
+  }
+}
+
+function AiPanel({
+  messages,
+  chips,
+  onAsk,
+}: {
+  messages: AiMessage[];
+  chips: readonly string[];
+  onAsk: (question: string) => void;
+}) {
+  const [draft, setDraft] = useState("");
+
+  function submit(question: string) {
+    const trimmed = question.trim();
+    if (!trimmed) {
+      return;
+    }
+    onAsk(trimmed);
+    setDraft("");
   }
 
   return (
@@ -339,13 +380,13 @@ function AiPanel({ summary, chips, answer }: Omit<PageAssistantProps, "contextTi
             key={chip}
             variant="outline"
             className="cursor-pointer hover:bg-muted"
-            onClick={() => ask(chip)}
+            onClick={() => submit(chip)}
             role="button"
             tabIndex={0}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
-                ask(chip);
+                submit(chip);
               }
             }}
           >
@@ -353,38 +394,105 @@ function AiPanel({ summary, chips, answer }: Omit<PageAssistantProps, "contextTi
           </Badge>
         ))}
       </div>
-      <p className="text-muted-foreground text-xs">
-        Scripted demo answers from page data — full copilot ships in SPEC 05.
-      </p>
+      <form
+        className="flex items-center gap-2"
+        onSubmit={(event) => {
+          event.preventDefault();
+          submit(draft);
+        }}
+      >
+        <Input
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          placeholder="Ask about this page…"
+          aria-label="Ask the page assistant"
+        />
+        <Button type="submit" size="icon-sm" aria-label="Send question">
+          <Send />
+        </Button>
+      </form>
+      <p className="text-muted-foreground text-xs">Demo answers computed from page data.</p>
     </div>
   );
 }
 
 export function PageAssistant({ contextTitle, summary, chips, answer }: PageAssistantProps) {
   const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState<AiMessage[]>(
+    () => readStored(contextTitle) ?? [{ id: 0, role: "assistant", text: summary }],
+  );
+  const answerRef = useRef(answer);
+  answerRef.current = answer;
+
+  useEffect(() => {
+    setMessages(readStored(contextTitle) ?? [{ id: 0, role: "assistant", text: summary }]);
+  }, [contextTitle, summary]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        `${ASSISTANT_STORAGE_KEY}:${contextTitle}`,
+        JSON.stringify(messages.slice(-MAX_STORED)),
+      );
+    } catch {
+      // Private mode: chat simply does not persist this session.
+    }
+  }, [messages, contextTitle]);
+
+  const appendQuestion = useCallback((question: string) => {
+    const id = Date.now();
+    setMessages((current) => [
+      ...current,
+      { id, role: "user", text: question },
+      { id: id + 1, role: "assistant", text: answerRef.current(question) },
+    ]);
+  }, []);
+
+  function ask(question: string) {
+    appendQuestion(question);
+  }
+
+  useEffect(() => {
+    function onAskAi(event: Event) {
+      const detail = (event as CustomEvent<{ question?: unknown }>).detail;
+      if (typeof detail?.question !== "string" || detail.question.trim() === "") {
+        return;
+      }
+      setOpen(true);
+      appendQuestion(detail.question.trim());
+    }
+    window.addEventListener("mplads:ask-ai", onAskAi);
+    return () => window.removeEventListener("mplads:ask-ai", onAskAi);
+  }, [appendQuestion]);
 
   return (
-    <>
-      <Button
-        className="fixed right-4 bottom-4 z-40 shadow-lg"
-        size="sm"
-        onClick={() => setOpen(true)}
-        aria-label={`Open page assistant — ${contextTitle}`}
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        render={
+          <Button
+            className="fixed right-4 bottom-4 z-40 shadow-lg"
+            size="sm"
+            aria-label={`Open page assistant — ${contextTitle}`}
+          />
+        }
       >
         <Sparkles data-icon="inline-start" />
         Ask AI
-      </Button>
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="right" className="flex w-full flex-col sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle>Page assistant — {contextTitle}</SheetTitle>
-            <SheetDescription>Scripted demo answers for this page.</SheetDescription>
-          </SheetHeader>
-          <div className="flex min-h-0 flex-1 flex-col px-4 pb-4">
-            <AiPanel summary={summary} chips={chips} answer={answer} />
+      </PopoverTrigger>
+      <PopoverContent side="top" align="end" className="flex h-[32rem] w-[min(24rem,calc(100vw-2rem))] flex-col p-0">
+        <div className="flex items-center justify-between gap-2 border-b px-4 py-3">
+          <div className="min-w-0">
+            <p className="font-medium text-sm">Page assistant</p>
+            <p className="truncate text-muted-foreground text-xs">{contextTitle}</p>
           </div>
-        </SheetContent>
-      </Sheet>
-    </>
+          <Button variant="ghost" size="icon-sm" aria-label="Close assistant" onClick={() => setOpen(false)}>
+            <X />
+          </Button>
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col px-4 py-3">
+          <AiPanel messages={messages} chips={chips} onAsk={ask} />
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

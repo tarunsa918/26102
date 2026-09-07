@@ -42,9 +42,12 @@ export function DossierEvidence({ workId, evidence, view, onViewChange }: Dossie
     setItems(evidence);
   }, [evidence]);
 
-  useEffect(() => () => {
-    window.clearTimeout(timer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      window.clearTimeout(timer.current);
+    },
+    [],
+  );
 
   function simulateUpload() {
     if (uploading) {
@@ -108,72 +111,70 @@ export function DossierEvidence({ workId, evidence, view, onViewChange }: Dossie
 function EvidenceBody({ items, view }: { items: Evidence[]; view: EvidenceView }) {
   if (view === "list") {
     return (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="pl-0">Name</TableHead>
-              <TableHead className="hidden md:table-cell">Uploaded by</TableHead>
-              <TableHead className="hidden lg:table-cell">Uploaded</TableHead>
-              <TableHead className="hidden sm:table-cell">Size</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.map((file) => {
-              const FileIcon = EVIDENCE_ICONS[file.kind];
-              return (
-                <TableRow key={file.id}>
-                  <TableCell className="pl-0">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <FileIcon className="size-5 shrink-0 text-muted-foreground" />
-                      <span className="truncate text-sm">{file.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <div className="flex items-center gap-2">
-                      <Avatar size="sm">
-                        <AvatarFallback>{initialsOf(file.by)}</AvatarFallback>
-                      </Avatar>
-                      <span>{file.by}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden text-muted-foreground lg:table-cell">
-                    {relativeDay(file.uploadedAt)}
-                  </TableCell>
-                  <TableCell className="hidden text-muted-foreground sm:table-cell">
-                    {formatSize(file.sizeKb)}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="pl-0">Name</TableHead>
+            <TableHead className="hidden md:table-cell">Uploaded by</TableHead>
+            <TableHead className="hidden lg:table-cell">Uploaded</TableHead>
+            <TableHead className="hidden sm:table-cell">Size</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {items.map((file) => {
+            const FileIcon = EVIDENCE_ICONS[file.kind];
+            return (
+              <TableRow key={file.id}>
+                <TableCell className="pl-0">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <FileIcon className="size-5 shrink-0 text-muted-foreground" />
+                    <span className="truncate text-sm">{file.name}</span>
+                  </div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  <div className="flex items-center gap-2">
+                    <Avatar size="sm">
+                      <AvatarFallback>{initialsOf(file.by)}</AvatarFallback>
+                    </Avatar>
+                    <span>{file.by}</span>
+                  </div>
+                </TableCell>
+                <TableCell className="hidden text-muted-foreground lg:table-cell">
+                  {relativeDay(file.uploadedAt)}
+                </TableCell>
+                <TableCell className="hidden text-muted-foreground sm:table-cell">{formatSize(file.sizeKb)}</TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
     );
   }
 
   return (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {items.map((file) => {
-            const FileIcon = EVIDENCE_ICONS[file.kind];
-            return (
-              <div key={file.id} className="rounded-xl border bg-card shadow-xs">
-                <div className="p-2">
-                  <div className="relative flex h-36 items-center justify-center rounded-lg bg-muted/50">
-                    <FileIcon className="size-12 text-muted-foreground" aria-hidden="true" />
-                    <div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-3 text-muted-foreground text-xs">
-                      <span>{EVIDENCE_LABELS[file.kind]}</span>
-                      <span>{formatSize(file.sizeKb)}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="px-4 pb-4">
-                  <p className="truncate font-medium text-sm">{file.name}</p>
-                  <p className="truncate text-muted-foreground text-xs">
-                    Uploaded {relativeDay(file.uploadedAt)} by {file.by}
-                  </p>
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {items.map((file) => {
+        const FileIcon = EVIDENCE_ICONS[file.kind];
+        return (
+          <div key={file.id} className="rounded-xl border bg-card shadow-xs">
+            <div className="p-2">
+              <div className="relative flex h-36 items-center justify-center rounded-lg bg-muted/50">
+                <FileIcon className="size-12 text-muted-foreground" aria-hidden="true" />
+                <div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-3 text-muted-foreground text-xs">
+                  <span>{EVIDENCE_LABELS[file.kind]}</span>
+                  <span>{formatSize(file.sizeKb)}</span>
                 </div>
               </div>
-            );
-          })}
-        </div>
-    );
+            </div>
+            <div className="px-4 pb-4">
+              <p className="truncate font-medium text-sm">{file.name}</p>
+              <p className="truncate text-muted-foreground text-xs">
+                Uploaded {relativeDay(file.uploadedAt)} by {file.by}
+              </p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 }

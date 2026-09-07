@@ -37,6 +37,10 @@
 |----|------|----------|--------|---------|
 | ADR-017 | 2026-09-07 | Dev-only `agentation@3.0.2` visual-feedback overlay mounted in root shell (NODE_ENV-gated) | Superseded by ADR-018 | package.json, routes/__root.tsx |
 | ADR-018 | 2026-09-07 | Remove agentation (duplicate-React hook crash); adopt template chat as Sentinel Copilot page + sidebar entry | Accepted | routes/(main)/chat/**, sidebar-items.ts |
+| ADR-019 | 2026-09-07 | Assistant becomes anchored popover drawer with free-text input + localStorage persistence; Enter-to-send in composers | Accepted | page-assistant, chat thread |
+| ADR-020 | 2026-09-07 | Reinstall agentation with Vite resolve.dedupe for single React copy (fixes hook crash) | Accepted | package.json, vite.config.ts, routes/__root.tsx |
+| ADR-021 | 2026-09-07 | works/route.tsx had no Outlet so $workId dossier never rendered; split into layout (Outlet) + index (ledger) | Accepted | dashboard/works/route.tsx, index.tsx |
+| ADR-022 | 2026-09-07 | Dossier redesign: KPI strip + map/tender command row, inline assistant removed (Ask-AI popover via mplads:ask-ai event), enriched flags, financials KPI row deleted | Accepted | works/$workId/**, page-assistant |
 | ADR-016 | 2026-09-07 | Parallel worktree lanes (A/B/C/D) merged conflict-free into 006, build after each merge | Accepted | git workflow, 006-officer-workspace |
 | ADR-015 | 2026-09-07 | Single MPLADS sidebar group (8 links) + floating page-level Ask-AI toggle on every dashboard page | Accepted | sidebar-items.ts, dashboard shell, page-assistant |
 | ADR-014 | 2026-09-07 | Adopt template pages in place (finance/analytics/tasks/calendar/file-manager/invoice) — relabel + rebind to mock, layouts untouched | Accepted | 6 template screens |
@@ -72,6 +76,16 @@
 ---
 
 ## Decision Entries
+
+### ADR-020: Agentation reinstalled — duplicate React fixed via dedupe
+- **Date**: 2026-09-07
+- **Status**: Accepted
+- **Context**: User wants the Agentation feedback overlay back for UI suggestions; the ADR-018 crash was two React copies (app + pre-bundled dep), not a broken package.
+- **Options considered**: Error boundary around the toolbar (rejected — treats symptom, tree stays double-React); `resolve.dedupe: ["react", "react-dom", "react/jsx-runtime"]` forcing one copy (chosen).
+- **Decision**: Reinstalled `agentation@3.0.2` (`--save-dev`), rewired dev-gated `<Agentation />` in the root shell, added dedupe to `vite.config.ts`.
+- **Why**: Standard Vite fix for hook-call crashes from pre-bundled deps; keeps the UI-feedback workflow the user asked for.
+- **Consequences**: If the crash recurs in dev, the fallback is lazy-mounting the toolbar behind an error boundary — report the console log.
+- **Affects**: package.json, vite.config.ts, routes/__root.tsx
 
 ### ADR-018: Remove agentation; template chat becomes the Copilot page
 - **Date**: 2026-09-07

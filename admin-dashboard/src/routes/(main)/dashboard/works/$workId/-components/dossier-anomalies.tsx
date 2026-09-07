@@ -1,4 +1,6 @@
-import { ArrowLeftRight, Clock, FileText, Sparkles, Wallet } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+
+import { ArrowLeftRight, Clock, FileText, MessagesSquare, Sparkles, Wallet } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +14,8 @@ import { type DossierTab, SEVERITY_BAR, SEVERITY_DOT, SEVERITY_STYLES, TYPE_LABE
 interface DossierAnomaliesProps {
   work: Work;
   flags: Anomaly[];
+  evidenceCount: number;
+  ucPending: boolean;
   onGoTab: (tab: DossierTab) => void;
   onAskAI: (question: string, flag: Anomaly) => void;
 }
@@ -82,7 +86,30 @@ function PeerBar({ actual, median, severity }: { actual: number; median: number;
   );
 }
 
-export function DossierAnomalies({ work, flags, onGoTab, onAskAI }: DossierAnomaliesProps) {
+function PeerTable({ flag, work }: { flag: Anomaly; work: Work }) {
+  if (flag.actualLakh === null || flag.peerMedianLakh === null) {
+    return null;
+  }
+  const ratio = flag.peerMedianLakh > 0 ? (flag.actualLakh / flag.peerMedianLakh).toFixed(1) : "—";
+  const rows: Array<[string, string]> = [
+    ["Peer group", `${flag.peerN} similar ${TYPE_LABELS[work.type].toLowerCase()} works in ${work.district}`],
+    ["Peer median", formatLakh(flag.peerMedianLakh)],
+    ["This work", formatLakh(flag.actualLakh)],
+    ["Deviation", `${ratio}× the median`],
+  ];
+  return (
+    <dl className="grid gap-x-6 sm:grid-cols-2">
+      {rows.map(([term, value]) => (
+        <div key={term} className="flex items-baseline justify-between gap-3 border-b py-1.5 last:border-b-0">
+          <dt className="text-muted-foreground text-xs">{term}</dt>
+          <dd className="text-right text-sm tabular-nums">{value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+export function DossierAnomalies({ work, flags, evidenceCount, ucPending, onGoTab, onAskAI }: DossierAnomaliesProps) {
   const duplicateFlag = flags.find((flag) => flag.kind === "duplicate");
   const twinSignal =
     duplicateFlag?.signals.find((signal) => /duplicate|near/i.test(signal.label)) ?? duplicateFlag?.signals[0];
@@ -156,6 +183,7 @@ export function DossierAnomalies({ work, flags, onGoTab, onAskAI }: DossierAnoma
                     />
                   </>
                 )}
+                <PeerTable flag={flag} work={work} />
                 <div className="flex flex-col gap-2">
                   {flag.signals.map((signal) => {
                     const Icon = signalIcon(signal.label);
@@ -170,6 +198,21 @@ export function DossierAnomalies({ work, flags, onGoTab, onAskAI }: DossierAnoma
                     );
                   })}
                 </div>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <Badge className="rounded-sm" variant="outline">
+                    {evidenceCount} evidence file{evidenceCount === 1 ? "" : "s"} linked
+                  </Badge>
+                  <Badge
+                    className={
+                      ucPending
+                        ? "rounded-sm border-amber-600/20 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                        : "rounded-sm"
+                    }
+                    variant="outline"
+                  >
+                    UC {ucPending ? "pending" : "on record"}
+                  </Badge>
+                </div>
                 <p className="text-muted-foreground text-sm">{AI_SENTENCES[flag.kind]}</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -182,6 +225,10 @@ export function DossierAnomalies({ work, flags, onGoTab, onAskAI }: DossierAnoma
                 <Button size="sm" variant="ghost" onClick={() => onAskAI("Why was this flagged?", flag)}>
                   <Sparkles data-icon="inline-start" />
                   Ask AI
+                </Button>
+                <Button size="sm" variant="ghost" nativeButton={false} render={<Link to="/chat" />}>
+                  <MessagesSquare data-icon="inline-start" />
+                  Open in chat
                 </Button>
               </div>
             </CardContent>

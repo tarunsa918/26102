@@ -1,4 +1,4 @@
-import { type CSSProperties, useState } from "react";
+import { type CSSProperties, useEffect, useState } from "react";
 
 import { cn } from "cn";
 
@@ -17,13 +17,57 @@ interface ChatProps {
   conversations: Conversation[];
 }
 
+const COPILOT_STORAGE_KEY = "mplads-copilot-v1";
+
+const MAX_COPILOT_STORED = 50;
+
+function isStoredMessage(item: unknown): item is Message {
+  if (typeof item !== "object" || item === null) {
+    return false;
+  }
+  const record = item as Record<string, unknown>;
+  return (
+    typeof record.id === "number" &&
+    (record.align === "start" || record.align === "end") &&
+    typeof record.text === "string" &&
+    typeof record.time === "string"
+  );
+}
+
+function readCopilotStored(): Message[] {
+  if (typeof window === "undefined") {
+    return [];
+  }
+  try {
+    const raw = window.localStorage.getItem(COPILOT_STORAGE_KEY);
+    if (!raw) {
+      return [];
+    }
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return (parsed as unknown[]).filter(isStoredMessage);
+  } catch {
+    return [];
+  }
+}
+
 export function Chat({ conversations }: ChatProps) {
   const [chat] = useChat();
   const [showContact, setShowContact] = useState(false);
   const [showThread, setShowThread] = useState(false);
-  const [copilotExtra, setCopilotExtra] = useState<Message[]>([]);
+  const [copilotExtra, setCopilotExtra] = useState<Message[]>(readCopilotStored);
   const isLg = useIsLg();
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(COPILOT_STORAGE_KEY, JSON.stringify(copilotExtra.slice(-MAX_COPILOT_STORED)));
+    } catch {
+      // Private mode: copilot chat simply does not persist this session.
+    }
+  }, [copilotExtra]);
 
   const activeConversation = conversations.find((c) => c.id === chat.selected) ?? conversations[0];
   const isCopilot = activeConversation.id === COPILOT_ID;

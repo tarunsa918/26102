@@ -1,6 +1,7 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { Agentation } from "agentation";
 
 import { Toaster } from "@/components/ui/toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -87,6 +88,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <PreferencesStoreProvider initialValues={PREFERENCE_DEFAULTS}>
             {children}
             <Toaster />
+            {process.env.NODE_ENV === "development" && <Agentation />}
           </PreferencesStoreProvider>
         </TooltipProvider>
         <TanStackDevtools

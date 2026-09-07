@@ -60,15 +60,11 @@ export function WorkLocationMap({ work }: WorkLocationMapProps) {
                         geography={geo}
                         style={{
                           default: {
-                            fill: isHome
-                              ? "color-mix(in oklch, var(--primary) 25%, transparent)"
-                              : "var(--muted)",
+                            fill: isHome ? "color-mix(in oklch, var(--primary) 25%, transparent)" : "var(--muted)",
                             outline: "none",
                           },
                           hover: {
-                            fill: isHome
-                              ? "color-mix(in oklch, var(--primary) 35%, transparent)"
-                              : "var(--muted)",
+                            fill: isHome ? "color-mix(in oklch, var(--primary) 35%, transparent)" : "var(--muted)",
                             outline: "none",
                           },
                           pressed: { outline: "none" },
@@ -83,12 +79,7 @@ export function WorkLocationMap({ work }: WorkLocationMapProps) {
               <Marker coordinates={[createLongitude(work.lon), createLatitude(work.lat)]}>
                 <circle r={8} fill="var(--background)" stroke="var(--primary)" strokeWidth={3} />
                 <circle r={3} fill="var(--primary)" />
-                <text
-                  textAnchor="middle"
-                  y={-14}
-                  className="fill-foreground font-mono"
-                  style={{ fontSize: 12 }}
-                >
+                <text textAnchor="middle" y={-14} className="fill-foreground font-mono" style={{ fontSize: 12 }}>
                   {work.id}
                 </text>
               </Marker>

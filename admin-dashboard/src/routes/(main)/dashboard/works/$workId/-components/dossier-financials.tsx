@@ -1,9 +1,8 @@
 import { CartesianGrid, Label, Line, LineChart, Pie, PieChart, XAxis, YAxis } from "recharts";
 
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { formatINR, formatLakh } from "@/lib/mplads-mock";
+import { formatLakh } from "@/lib/mplads-mock";
 import type { Work } from "@/lib/mplads-schema";
 
 import type { SpendPoint } from "./dossier-data";
@@ -12,7 +11,6 @@ interface DossierFinancialsProps {
   work: Work;
   series: SpendPoint[];
   peerLabel: string;
-  utilisationPct: number;
 }
 
 const chartConfig = {
@@ -33,7 +31,8 @@ interface FundSlice {
   percentage: number;
 }
 
-export function DossierFinancials({ work, series, peerLabel, utilisationPct }: DossierFinancialsProps) {
+export function DossierFinancials({ work, series, peerLabel }: DossierFinancialsProps) {
+  const utilisationPct = work.sanctionedLakh > 0 ? (work.expenditureLakh / work.sanctionedLakh) * 100 : 0;
   const returnedLakh = work.returnedLakh;
   const balanceLakh = Math.max(work.sanctionedLakh - work.expenditureLakh - returnedLakh, 0);
   const slices: FundSlice[] = [
@@ -69,68 +68,6 @@ export function DossierFinancials({ work, series, peerLabel, utilisationPct }: D
 
   return (
     <div className="flex flex-col gap-4 py-4">
-      <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
-        <div className="grid grid-cols-1 xl:grid-cols-12">
-          <Card className="gap-5 overflow-hidden rounded-none border-0 border-foreground/10 border-b ring-0 xl:col-span-3 xl:border-r">
-            <CardHeader>
-              <CardTitle className="font-normal">Sanctioned</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-end justify-between">
-              <div className="space-y-1">
-                <div className="font-heading text-3xl tabular-nums leading-none tracking-tight">
-                  {formatLakh(work.sanctionedLakh)}
-                </div>
-                <p className="text-muted-foreground text-xs">{formatINR(work.sanctionedLakh)}</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="gap-5 overflow-hidden rounded-none border-0 border-foreground/10 border-b ring-0 xl:col-span-3 xl:border-r">
-            <CardHeader>
-              <CardTitle className="font-normal">Spent</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-end justify-between">
-              <div className="flex flex-col gap-1">
-                <div className="font-heading text-3xl tabular-nums leading-none tracking-tight">
-                  {formatLakh(work.expenditureLakh)}
-                </div>
-                <p className="text-muted-foreground text-xs">{formatINR(work.expenditureLakh)}</p>
-              </div>
-              <Badge className="bg-green-500/10 text-green-700 dark:bg-green-500/15 dark:text-green-300">
-                {utilisationPct.toFixed(0)}% released
-              </Badge>
-            </CardContent>
-          </Card>
-          <Card className="gap-5 overflow-hidden rounded-none border-0 border-foreground/10 border-b ring-0 xl:col-span-3 xl:border-r">
-            <CardHeader>
-              <CardTitle className="font-normal">Returned</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-end justify-between">
-              <div className="flex flex-col gap-1">
-                <div className="font-heading text-3xl tabular-nums leading-none tracking-tight">
-                  {formatLakh(returnedLakh)}
-                </div>
-                <p className="text-muted-foreground text-xs">
-                  {returnedLakh > 0 ? "Surrendered back" : "Nothing returned"}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="gap-5 overflow-hidden rounded-none border-0 ring-0 xl:col-span-3">
-            <CardHeader>
-              <CardTitle className="font-normal">Balance</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-end justify-between">
-              <div className="flex flex-col gap-1">
-                <div className="font-heading text-3xl tabular-nums leading-none tracking-tight">
-                  {formatLakh(balanceLakh)}
-                </div>
-                <p className="text-muted-foreground text-xs">Yet to be released</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
       <div className="grid gap-4 xl:grid-cols-12">
         <Card className="xl:col-span-7">
           <CardHeader>
