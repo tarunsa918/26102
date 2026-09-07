@@ -7,22 +7,27 @@ import { cn } from "cn";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { users } from "@/data/users";
-import { getDashboardLayout } from "@/server/server-actions";
+import { getDashboardLayout, getValueFromCookie } from "@/server/server-actions";
+import { parseRole, ROLE_COOKIE_KEY } from "@/stores/role/role-store";
 
 import { AccountSwitcher } from "./-components/header/account-switcher";
 import { GitHubRepositoriesMenu } from "./-components/header/github-repositories-menu";
 import { LayoutControls } from "./-components/header/layout-controls";
+import { RoleSwitcher } from "./-components/header/role-switcher";
 import { SearchDialog } from "./-components/header/search-dialog";
 import { ThemeSwitcher } from "./-components/header/theme-switcher";
 import { AppSidebar } from "./-components/sidebar/app-sidebar";
 
 export const Route = createFileRoute("/(main)/dashboard")({
-  loader: () => getDashboardLayout(),
+  loader: async () => {
+    const layout = await getDashboardLayout();
+    return { ...layout, role: parseRole(await getValueFromCookie(ROLE_COOKIE_KEY)) };
+  },
   component: DashboardLayout,
 });
 
 function DashboardLayout() {
-  const { defaultOpen, variant, collapsible } = Route.useLoaderData();
+  const { defaultOpen, variant, collapsible, role } = Route.useLoaderData();
 
   return (
     <SidebarProvider
@@ -64,6 +69,7 @@ function DashboardLayout() {
               <LayoutControls />
               <ThemeSwitcher />
               <GitHubRepositoriesMenu />
+              <RoleSwitcher initialRole={role} />
               <AccountSwitcher users={users} />
             </div>
           </div>

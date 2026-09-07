@@ -1,3 +1,5 @@
+import { useNavigate } from "@tanstack/react-router";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -14,18 +16,8 @@ const formSchema = z.object({
   remember: z.boolean().optional(),
 });
 
-const onSubmit = (data: z.infer<typeof formSchema>) => {
-  toast.add({
-    title: "You submitted the following values",
-    description: (
-      <pre className="mt-2 w-[320px] rounded-md bg-neutral-950 p-4">
-        <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-      </pre>
-    ),
-  });
-};
-
 export function LoginForm() {
+  const navigate = useNavigate();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -34,6 +26,14 @@ export function LoginForm() {
       remember: false,
     },
   });
+
+  const onSubmit = (data: z.infer<typeof formSchema>) => {
+    toast.add({
+      title: "Signed in (prototype)",
+      description: `Welcome back, ${data.email}. No real authentication in the prototype.`,
+    });
+    void navigate({ to: "/dashboard/overview" });
+  };
 
   return (
     <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
@@ -99,6 +99,7 @@ export function LoginForm() {
       <Button className="w-full" type="submit">
         Login
       </Button>
+      <p className="text-center text-muted-foreground text-xs">Demo access — officer.demo@example.com / demo1234</p>
     </form>
   );
 }

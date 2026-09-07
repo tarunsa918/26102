@@ -35,6 +35,9 @@
 
 | ID | Date | Decision | Status | Affects |
 |----|------|----------|--------|---------|
+| ADR-010 | 2026-09-07 | SPEC 02 polish: ministry-first default, CRM outline badges, visible map error+retry | Accepted | role store, overview components |
+| ADR-009 | 2026-09-07 | SPEC 02: vendored 2015-vintage states GeoJSON (slimmed, GeoJSON not TopoJSON), plain-Table queue, SVG-anchor map selection, Bhopal scope | Accepted | dashboard/overview, public/geo, role store |
+| ADR-008 | 2026-09-07 | SPEC 01: overview under dashboard shell, interim stub, validation kept, standalone role store on existing cookie fns | Accepted | dashboard routes, header, src/stores/role/ |
 | ADR-007 | 2026-09-07 | SPEC 00 mock contract: seeded mulberry32 + fixed demo date, derived geo rollup, INR/lakh helpers on existing idioms | Accepted | admin-dashboard/src/lib/mplads-schema.ts, mplads-mock.ts |
 | ADR-006 | 2026-09-06 | SIH MVP: 5 routes, reuse template components (not structure), UI-first prototype on mock data | Accepted | admin-dashboard/, all context files |
 | ADR-005 | 2026-09-06 | Skip Impeccable install after npm ECOMPROMISED refusal; do not --force | Accepted | repo root tooling |
@@ -61,6 +64,36 @@
 ---
 
 ## Decision Entries
+
+### ADR-010: SPEC 02 polish — ministry-first default, outline badges, visible map errors
+- **Date**: 2026-09-07
+- **Status**: Accepted
+- **Context**: Live review reported three symptoms: KPI strip looked "AI solid", queue showed only 3 rows with no pagination, map fully blank. Audit (redesign-existing-projects skill) vs CRM/finance donors found: solid-fill badges (metric-cards ships 2 solid + 3 solid-destructive; CRM uses outline tone washes); district-first default scoped the queue to 5 Bhopal works → 3 flagged rows; map failure rendered an endless `Skeleton` with the error only in the console.
+- **Options considered**: Pagination on the 8-row card (rejected — decoration on a fixed list; the full filterable table is SPEC 03); rebuilding cards from scratch (rejected — donor anatomy stays, only badge language changed); keeping district-first per SPEC-01 text (rejected — the command centre's first paint must be the full demo, scoping is one click away).
+- **Decision**: Default role `ministry` (store + `parseRole` fallback + label fallback); KPI badges to `outline` + green/destructive washes (CRM idiom, same layout/captions); map gets a visible "Map unavailable + Retry" state (retry counter, `useExhaustiveDependencies` suppression documented inline).
+- **Why**: First paint now shows the judged story (8 rows, W-1014 first, 6-state map); badges match the repo's most premium strip; a blank map is now a diagnosable state instead of a mystery.
+- **Consequences**: Overrides SPEC-01 "district first" acceptance — spec text kept for history, behavior is ministry-first; role switch still demonstrates scoping (verified headless: 8/4/3 rows).
+- **Affects**: `src/stores/role/role-store.ts`, overview `kpi-strip`/`india-risk-map`/`priority-queue`
+
+### ADR-009: SPEC 02 overview — vendored GeoJSON, plain-Table queue, SVG-anchor selection
+- **Date**: 2026-09-07
+- **Status**: Accepted
+- **Context**: SPEC 02 needs India state geometry (not in repo) plus a queue that is deliberately dumber than the tasks table (8 fixed rows, no sort/filter/pagination).
+- **Options considered**: 11MB full-res states GeoJSON (rejected — demo weight); hand-rolled TopoJSON conversion (rejected — no offline tooling); full TanStack table for 8 static rows (rejected — machinery with every feature explicitly out of scope); `role="button"` on SVG paths (rejected — trips `useSemanticElements` with no valid suppression point).
+- **Decision**: Vendored click_that_hood 35-state GeoJSON (2015 vintage: undivided J&K, has Telangana; covers all 6 seed states), stripped to `{name}` + 2-decimal coords + dupe removal (3.2MB→501KB) at `public/geo/india-states.json` — GeoJSON rendered natively by d3 (no TopoJSON step, no new deps). Queue = plain `Table` with tasks row classes. Map states = SVG `<a href="?state=">` (progressive enhancement + free keyboard/focus) with SPA `preventDefault` navigate; no-data states get native `<title>`.
+- **Why**: Smallest honest build: component clones donor mechanics, data file is cached once, queue matches its actual requirements, selection is semantic HTML instead of ARIA workarounds.
+- **Consequences**: Map vintage predates Ladakh split — fine for demo choropleth, revisit with official LGD/SOI source before production; dossier/works anchors are plain `<a>` until SPEC 03/04 own the routes (typed `Link` would fail tsc today).
+- **Affects**: `dashboard/overview/`, `public/geo/india-states.json`, role label (Bhopal)
+
+### ADR-008: SPEC 01 entry + role lens — shell mapping, stub, kept validation
+- **Date**: 2026-09-07
+- **Status**: Accepted
+- **Context**: SPEC 01 text says `/overview`, but the dashboard shell (sidebar/header/role switcher) only renders under `/dashboard/*`; a top-level `/overview` would hide the role lens the queue needs.
+- **Options considered**: Literal top-level `/overview` route outside the shell (rejected — no header/role switcher where judges need it); keep `/dashboard` → default until SPEC 02 (rejected — breaks SPEC-01 acceptance); overview under the shell + coming-soon stub now, real queue in SPEC 02 (chosen).
+- **Decision**: `dashboard/overview/route.tsx` (URL `/dashboard/overview`, stub cloned from `coming-soon/route.tsx`); `/` + `/dashboard` redirect there; login keeps email/min-6 Zod validation (demo hint supplies passing credentials) and navigates there with a prototype toast; role = standalone zustand `create` store (chat/mail precedent, not the heavier preferences provider) on existing `getValueFromCookie`/`setValueToCookie`, validated by SPEC-00 `officerRoleSchema`, hydrated once from the dashboard loader.
+- **Why**: Every branch stays demo-able with zero console errors; no working behavior destroyed (validation, error states); smallest store that fits a cross-route lens; zero new server fns, zero new deps.
+- **Consequences**: SPEC 02 replaces the stub body (route file stays); if literal top-level paths are ever wanted, it's a route-file move, not a rewrite.
+- **Affects**: dashboard routes/header, `src/stores/role/`, entry redirects
 
 ### ADR-007: SPEC 00 mock-data contract — seeded RNG, fixed demo date, derived rollup
 - **Date**: 2026-09-07

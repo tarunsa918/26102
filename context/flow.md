@@ -124,9 +124,12 @@ sequenceDiagram
 
 | Route | Source | Purpose |
 |-------|--------|---------|
-| `/auth/v1|v2/login|register` | template (reuse) | Officer sign-in |
+| `/auth/v1|v2/login|register` | template (reuse) | Officer sign-in (any valid-shaped input → toast → `/dashboard/overview`) |
+| `/` and `/dashboard` | redirect (SPEC 01) | Entry → `/dashboard/overview`, zero clicks |
 | `/dashboard/default` etc. | template (donor only) | Reference screens — NOT in MVP nav |
 | `/overview` | **to build** | KPIs + map + priority queue |
+| `/dashboard/overview` | stub (SPEC 01) → SPEC 02 builds the queue here | Entry landing inside the dashboard shell |
+| `/dashboard/overview` | **BUILT (SPEC 02)**: `KpiStrip` + `IndiaRiskMap` + `PriorityQueue` (?state= two-way filter, role scoping) | Morning triage |
 | `/works` | **to build** | Search/filter/sort works |
 | `/works/:workId` | **to build** (`$param.tsx` pattern) | Dossier |
 | `/ai` | **to build** on `(main)/chat/` | Global copilot |
@@ -146,6 +149,7 @@ sequenceDiagram
 ## State flow
 
 1. Route loaders/server fns return Zod-typed data (mock today, DB later — same shapes).
+2. Role lens: header `RoleSwitcher` → `useRoleStore` (`src/stores/role/`) + `mplads_role` cookie (7d); dashboard loader hydrates the store; queue/map read role as a scope preset (Ministry = all 40, the first-paint default; State = MP; District = Bhopal).
 2. Dossier/AI conversation state: local component state first; promote to zustand store only when cross-route need is proven.
 3. Preferences (theme/layout) persist via existing cookie-backed server fns — untouched.
 

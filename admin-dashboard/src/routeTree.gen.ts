@@ -32,6 +32,7 @@ import { Route as mainDashboardInvoiceRouteRouteImport } from './routes/(main)/d
 import { Route as mainDashboardKanbanRouteRouteImport } from './routes/(main)/dashboard/kanban/route'
 import { Route as mainDashboardLogisticsRouteRouteImport } from './routes/(main)/dashboard/logistics/route'
 import { Route as mainDashboardMailRouteRouteImport } from './routes/(main)/dashboard/mail/route'
+import { Route as mainDashboardOverviewRouteRouteImport } from './routes/(main)/dashboard/overview/route'
 import { Route as mainDashboardPatientMonitoringRouteRouteImport } from './routes/(main)/dashboard/patient-monitoring/route'
 import { Route as mainDashboardProductivityRouteRouteImport } from './routes/(main)/dashboard/productivity/route'
 import { Route as mainDashboardProfileRouteRouteImport } from './routes/(main)/dashboard/profile/route'
@@ -174,6 +175,12 @@ const mainDashboardMailRouteRoute = mainDashboardMailRouteRouteImport.update({
   path: '/mail',
   getParentRoute: () => mainDashboardRouteRoute,
 } as any)
+const mainDashboardOverviewRouteRoute =
+  mainDashboardOverviewRouteRouteImport.update({
+    id: '/overview',
+    path: '/overview',
+    getParentRoute: () => mainDashboardRouteRoute,
+  } as any)
 const mainDashboardPatientMonitoringRouteRoute =
   mainDashboardPatientMonitoringRouteRouteImport.update({
     id: '/patient-monitoring',
@@ -274,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/kanban': typeof mainDashboardKanbanRouteRoute
   '/dashboard/logistics': typeof mainDashboardLogisticsRouteRoute
   '/dashboard/mail': typeof mainDashboardMailRouteRoute
+  '/dashboard/overview': typeof mainDashboardOverviewRouteRoute
   '/dashboard/patient-monitoring': typeof mainDashboardPatientMonitoringRouteRoute
   '/dashboard/productivity': typeof mainDashboardProductivityRouteRoute
   '/dashboard/profile': typeof mainDashboardProfileRouteRoute
@@ -312,6 +320,7 @@ export interface FileRoutesByTo {
   '/dashboard/kanban': typeof mainDashboardKanbanRouteRoute
   '/dashboard/logistics': typeof mainDashboardLogisticsRouteRoute
   '/dashboard/mail': typeof mainDashboardMailRouteRoute
+  '/dashboard/overview': typeof mainDashboardOverviewRouteRoute
   '/dashboard/patient-monitoring': typeof mainDashboardPatientMonitoringRouteRoute
   '/dashboard/productivity': typeof mainDashboardProductivityRouteRoute
   '/dashboard/profile': typeof mainDashboardProfileRouteRoute
@@ -352,6 +361,7 @@ export interface FileRoutesById {
   '/(main)/dashboard/kanban': typeof mainDashboardKanbanRouteRoute
   '/(main)/dashboard/logistics': typeof mainDashboardLogisticsRouteRoute
   '/(main)/dashboard/mail': typeof mainDashboardMailRouteRoute
+  '/(main)/dashboard/overview': typeof mainDashboardOverviewRouteRoute
   '/(main)/dashboard/patient-monitoring': typeof mainDashboardPatientMonitoringRouteRoute
   '/(main)/dashboard/productivity': typeof mainDashboardProductivityRouteRoute
   '/(main)/dashboard/profile': typeof mainDashboardProfileRouteRoute
@@ -393,6 +403,7 @@ export interface FileRouteTypes {
     | '/dashboard/kanban'
     | '/dashboard/logistics'
     | '/dashboard/mail'
+    | '/dashboard/overview'
     | '/dashboard/patient-monitoring'
     | '/dashboard/productivity'
     | '/dashboard/profile'
@@ -431,6 +442,7 @@ export interface FileRouteTypes {
     | '/dashboard/kanban'
     | '/dashboard/logistics'
     | '/dashboard/mail'
+    | '/dashboard/overview'
     | '/dashboard/patient-monitoring'
     | '/dashboard/productivity'
     | '/dashboard/profile'
@@ -470,6 +482,7 @@ export interface FileRouteTypes {
     | '/(main)/dashboard/kanban'
     | '/(main)/dashboard/logistics'
     | '/(main)/dashboard/mail'
+    | '/(main)/dashboard/overview'
     | '/(main)/dashboard/patient-monitoring'
     | '/(main)/dashboard/productivity'
     | '/(main)/dashboard/profile'
@@ -662,6 +675,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardMailRouteRouteImport
       parentRoute: typeof mainDashboardRouteRoute
     }
+    '/(main)/dashboard/overview': {
+      id: '/(main)/dashboard/overview'
+      path: '/overview'
+      fullPath: '/dashboard/overview'
+      preLoaderRoute: typeof mainDashboardOverviewRouteRouteImport
+      parentRoute: typeof mainDashboardRouteRoute
+    }
     '/(main)/dashboard/patient-monitoring': {
       id: '/(main)/dashboard/patient-monitoring'
       path: '/patient-monitoring'
@@ -779,6 +799,7 @@ interface mainDashboardRouteRouteChildren {
   mainDashboardKanbanRouteRoute: typeof mainDashboardKanbanRouteRoute
   mainDashboardLogisticsRouteRoute: typeof mainDashboardLogisticsRouteRoute
   mainDashboardMailRouteRoute: typeof mainDashboardMailRouteRoute
+  mainDashboardOverviewRouteRoute: typeof mainDashboardOverviewRouteRoute
   mainDashboardPatientMonitoringRouteRoute: typeof mainDashboardPatientMonitoringRouteRoute
   mainDashboardProductivityRouteRoute: typeof mainDashboardProductivityRouteRoute
   mainDashboardProfileRouteRoute: typeof mainDashboardProfileRouteRoute
@@ -809,6 +830,7 @@ const mainDashboardRouteRouteChildren: mainDashboardRouteRouteChildren = {
   mainDashboardKanbanRouteRoute: mainDashboardKanbanRouteRoute,
   mainDashboardLogisticsRouteRoute: mainDashboardLogisticsRouteRoute,
   mainDashboardMailRouteRoute: mainDashboardMailRouteRoute,
+  mainDashboardOverviewRouteRoute: mainDashboardOverviewRouteRoute,
   mainDashboardPatientMonitoringRouteRoute:
     mainDashboardPatientMonitoringRouteRoute,
   mainDashboardProductivityRouteRoute: mainDashboardProductivityRouteRoute,

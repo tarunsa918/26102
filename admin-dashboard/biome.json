@@ -41,6 +41,7 @@
       "!.nitro",
       "!.vercel",
       "!**/src/routeTree.gen.ts",
+      "!**/india-states.json",
       "!**/src/styles/styles.css",
       "!src/components/ui",
       "!src/components/calendar"
