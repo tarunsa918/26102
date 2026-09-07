@@ -35,6 +35,8 @@
 
 | ID | Date | Decision | Status | Affects |
 |----|------|----------|--------|---------|
+| ADR-017 | 2026-09-07 | Dev-only `agentation@3.0.2` visual-feedback overlay mounted in root shell (NODE_ENV-gated) | Superseded by ADR-018 | package.json, routes/__root.tsx |
+| ADR-018 | 2026-09-07 | Remove agentation (duplicate-React hook crash); adopt template chat as Sentinel Copilot page + sidebar entry | Accepted | routes/(main)/chat/**, sidebar-items.ts |
 | ADR-016 | 2026-09-07 | Parallel worktree lanes (A/B/C/D) merged conflict-free into 006, build after each merge | Accepted | git workflow, 006-officer-workspace |
 | ADR-015 | 2026-09-07 | Single MPLADS sidebar group (8 links) + floating page-level Ask-AI toggle on every dashboard page | Accepted | sidebar-items.ts, dashboard shell, page-assistant |
 | ADR-014 | 2026-09-07 | Adopt template pages in place (finance/analytics/tasks/calendar/file-manager/invoice) — relabel + rebind to mock, layouts untouched | Accepted | 6 template screens |
@@ -70,6 +72,26 @@
 ---
 
 ## Decision Entries
+
+### ADR-018: Remove agentation; template chat becomes the Copilot page
+- **Date**: 2026-09-07
+- **Status**: Accepted
+- **Context**: `agentation@3.0.2` crashed every dev page (`Invalid hook call` — ships its own React copy conflicting with the app's React 19; PolyForm-Shield license also non-open). Same session: user asked for a real AI chat page on the sidebar using existing code, not scripted chips.
+- **Options considered**: Vite `resolve.dedupe` alias to force one React (rejected — fights the package's bundling, fragile, keeps a Shield-licensed dep); remove agentation, adopt `(main)/chat` as Sentinel Copilot (chosen).
+- **Decision**: Uninstalled agentation, reverted `__root.tsx`; chat threads rebuilt from mock (1 copilot + 12 flagged-work threads), composer wired to a data-grounded `copilot-brain.ts` tool layer (explain/compare/list/stalls/UC/tender intents over live mock data, honest fallback); header search + list tabs + sidebar nav all functional; dead template controls removed; sidebar gains AI Copilot → `/chat`.
+- **Why**: Crash was a broken dependency, not our code; the copilot answers compute from real data instead of canned strings, and every control on the page now works.
+- **Consequences**: No visual-feedback overlay until a React-19-safe alternative is found; copilot brain is deterministic tool calls — LLM provider decision stays open for SPEC 05.
+- **Affects**: routes/(main)/chat/**, sidebar-items.ts
+
+### ADR-017: Dev-only Agentation overlay for visual agent feedback
+- **Date**: 2026-09-07
+- **Status**: Accepted
+- **Context**: User requested the `agentation` package (visual feedback for AI coding agents) mounted at app root, dev only.
+- **Options considered**: Mount inside dashboard shell (rejected — should cover auth pages too); root shell next to Toaster with NODE_ENV gate (chosen).
+- **Decision**: `npm install agentation --save-dev` (v3.0.2, 0 vulnerabilities); `<Agentation />` in `__root.tsx` gated on `process.env.NODE_ENV === "development"`. Production bundle unaffected (dead-code eliminated).
+- **Why**: Whole-app coverage including login; zero prod impact.
+- **Consequences**: New devDependency to keep updated; if the overlay ever breaks SSR dev, wrap in client-only boundary.
+- **Affects**: package.json, routes/__root.tsx
 
 ### ADR-016: Parallel worktree lanes merged conflict-free, build per merge
 - **Date**: 2026-09-07

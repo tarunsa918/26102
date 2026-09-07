@@ -8,6 +8,7 @@ import {
   ListTodo,
   type LucideIcon,
   ReceiptText,
+  Sparkles,
 } from "lucide-react";
 
 import type { FileRoutesByTo } from "@/routeTree.gen";
@@ -103,6 +104,12 @@ export const sidebarItems: NavGroup[] = [
         title: "UC Tracking",
         url: "/dashboard/invoice",
         icon: ReceiptText,
+      },
+      {
+        id: "copilot",
+        title: "AI Copilot",
+        url: "/chat",
+        icon: Sparkles,
       },
     ],
   },

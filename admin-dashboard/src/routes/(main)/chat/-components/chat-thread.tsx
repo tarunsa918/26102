@@ -48,13 +48,22 @@ import { type Message as ChatMessage, type Contact, currentUser } from "./data";
 interface ChatThreadProps {
   contact: Contact;
   messages: ChatMessage[];
+  onSendMessage?: (text: string) => void;
   onOpenContact?: () => void;
   onBack?: () => void;
   showBackButton?: boolean;
   className?: string;
 }
 
-export function ChatThread({ contact, messages, onOpenContact, onBack, showBackButton, className }: ChatThreadProps) {
+export function ChatThread({
+  contact,
+  messages,
+  onSendMessage,
+  onOpenContact,
+  onBack,
+  showBackButton,
+  className,
+}: ChatThreadProps) {
   return (
     <div className={cn("flex h-full flex-col py-3", className)}>
       <div className="flex flex-col gap-3">
@@ -202,10 +211,10 @@ export function ChatThread({ contact, messages, onOpenContact, onBack, showBackB
           </TabsList>
 
           <TabsContent value="reply" className="m-0">
-            <MessageComposer placeholder="Type your message..." />
+            <MessageComposer placeholder="Type your message..." onSend={onSendMessage} />
           </TabsContent>
           <TabsContent value="note" className="m-0">
-            <MessageComposer placeholder="Write an internal note..." />
+            <MessageComposer placeholder="Write an internal note..." onSend={onSendMessage} />
           </TabsContent>
         </Tabs>
       </div>
@@ -213,16 +222,24 @@ export function ChatThread({ contact, messages, onOpenContact, onBack, showBackB
   );
 }
 
-function MessageComposer({ placeholder }: { placeholder: string }) {
+function MessageComposer({ placeholder, onSend }: { placeholder: string; onSend?: (text: string) => void }) {
   return (
     <form
       className="w-full"
       onSubmit={(event) => {
         event.preventDefault();
+        const data = new FormData(event.currentTarget);
+        const text = String(data.get("message") ?? "").trim();
+        if (!text) {
+          return;
+        }
+        onSend?.(text);
+        event.currentTarget.reset();
       }}
     >
       <InputGroup className="border-0 bg-transparent shadow-none has-[[data-slot=input-group-control]:focus-visible]:border-0 has-[[data-slot][aria-invalid=true]]:border-0 has-[[data-slot=input-group-control]:focus-visible]:ring-0 has-[[data-slot][aria-invalid=true]]:ring-0 dark:bg-transparent dark:has-[[data-slot][aria-invalid=true]]:ring-0">
         <InputGroupTextarea
+          name="message"
           placeholder={placeholder}
           className="min-h-14 px-3 py-2.5 text-sm ring-0 focus-visible:ring-0 aria-invalid:ring-0 dark:aria-invalid:ring-0"
         />

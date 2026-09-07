@@ -1,5 +1,7 @@
+import { useState } from "react";
+
 import { cn } from "cn";
-import { ChevronDown, Filter, PanelRightClose, PanelRightOpen, Pin } from "lucide-react";
+import { ChevronDown, PanelRightClose, PanelRightOpen, Pin } from "lucide-react";
 
 import { Avatar, AvatarBadge, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -23,18 +25,25 @@ export function ChatConversationList({ conversations, onSelectConversation, clas
   const [chat, setChat] = useChat();
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
+  const [tab, setTab] = useState<"all" | "unread" | "pinned">("all");
 
-  const conversationGroups = conversations.reduce<
-    Array<{ group: Conversation["group"]; conversations: Conversation[] }>
-  >((groups, conversation) => {
-    const group = groups.find((item) => item.group === conversation.group);
-    if (group) {
-      group.conversations.push(conversation);
-    } else {
-      groups.push({ group: conversation.group, conversations: [conversation] });
-    }
-    return groups;
-  }, []);
+  const tabbed =
+    tab === "all" ? conversations : conversations.filter((c) => (tab === "unread" ? c.isUnread : c.group === "Pinned"));
+  const unreadCount = conversations.filter((c) => c.isUnread).length;
+  const pinnedCount = conversations.filter((c) => c.group === "Pinned").length;
+
+  const conversationGroups = tabbed.reduce<Array<{ group: Conversation["group"]; conversations: Conversation[] }>>(
+    (groups, conversation) => {
+      const group = groups.find((item) => item.group === conversation.group);
+      if (group) {
+        group.conversations.push(conversation);
+      } else {
+        groups.push({ group: conversation.group, conversations: [conversation] });
+      }
+      return groups;
+    },
+    [],
+  );
 
   return (
     <div className={cn("flex h-full flex-col gap-3 pt-3", className)}>
@@ -49,32 +58,26 @@ export function ChatConversationList({ conversations, onSelectConversation, clas
             {isCollapsed ? <PanelRightClose /> : <PanelRightOpen />}
           </Button>
           <Separator orientation="vertical" className="mr-1.5 h-4 data-vertical:self-center" />
-          <h1 className="font-medium text-xl leading-none">Inbox</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon-sm">
-            <Filter />
-          </Button>
+          <h1 className="font-medium text-xl leading-none">Threads</h1>
         </div>
       </div>
 
       <Separator />
 
-      <Tabs defaultValue="all">
+      <Tabs value={tab} onValueChange={(value) => setTab(value as "all" | "unread" | "pinned")}>
         <TabsList variant="line" className="w-full border-b px-0 **:data-[slot=tabs-trigger]:border-x-0">
           <TabsTrigger value="all">
             All
-            <span className="text-muted-foreground text-xs">(24)</span>
+            <span className="text-muted-foreground text-xs">({conversations.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="open">
-            Open
-            <span className="text-muted-foreground text-xs">(18)</span>
+          <TabsTrigger value="unread">
+            Unread
+            <span className="text-muted-foreground text-xs">({unreadCount})</span>
           </TabsTrigger>
-          <TabsTrigger value="snoozed">
-            Snoozed
-            <span className="text-muted-foreground text-xs">(2)</span>
+          <TabsTrigger value="pinned">
+            Pinned
+            <span className="text-muted-foreground text-xs">({pinnedCount})</span>
           </TabsTrigger>
-          <TabsTrigger value="closed">Closed</TabsTrigger>
         </TabsList>
       </Tabs>
 

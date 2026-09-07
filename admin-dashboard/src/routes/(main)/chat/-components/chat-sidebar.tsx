@@ -1,7 +1,7 @@
-import { EllipsisVertical, LogOut, Settings, UserRound } from "lucide-react";
-import { siFacebook, siInstagram, siWhatsapp } from "simple-icons";
+import { useNavigate } from "@tanstack/react-router";
 
-import { SimpleIcon } from "@/components/simple-icon";
+import { EllipsisVertical, LogOut, Settings, UserRound } from "lucide-react";
+
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -18,7 +18,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuBadge,
   SidebarMenuButton,
@@ -27,17 +26,41 @@ import {
 } from "@/components/ui/sidebar";
 import { getInitials } from "@/lib/utils";
 
-import { channelItems, currentUser, navItems, viewItems } from "./data";
-
-const channelBrandIcons = {
-  whatsapp: siWhatsapp,
-  instagram: siInstagram,
-  facebook: siFacebook,
-} as const;
+import { COPILOT_ID, conversations, currentUser, navItems } from "./data";
+import { useChat } from "./use-chat";
 
 export function ChatSidebar() {
   const { state } = useSidebar();
+  const [chat, setChat] = useChat();
+  const navigate = useNavigate();
   const _isCollapsed = state === "collapsed";
+
+  const firstHigh = conversations.find((c) => c.contact.tags.includes("high")) ?? conversations[0];
+
+  function handleNav(id: string) {
+    if (id === "copilot") {
+      setChat({ selected: COPILOT_ID });
+    } else if (id === "flagged") {
+      setChat({ selected: firstHigh.id });
+    } else if (id === "threads") {
+      setChat({ selected: conversations[0].id });
+    } else {
+      void navigate({
+        to: "/dashboard/works",
+        search: { lens: "needs-review", state: "", district: "", type: "", q: "" },
+      });
+    }
+  }
+
+  function isNavActive(id: string): boolean {
+    if (id === "copilot") {
+      return chat.selected === COPILOT_ID;
+    }
+    if (id === "flagged") {
+      return chat.selected === firstHigh.id;
+    }
+    return false;
+  }
 
   return (
     <Sidebar
@@ -49,41 +72,13 @@ export function ChatSidebar() {
           <SidebarMenu className="gap-1">
             {navItems.map((item) => (
               <SidebarMenuItem key={item.id}>
-                <SidebarMenuButton className="[&_svg]:size-3.5" size="sm" isActive={item.isActive} tooltip={item.title}>
-                  <item.icon />
-                  <span className="font-medium">{item.title}</span>
-                </SidebarMenuButton>
-                {item.label && <SidebarMenuBadge className="font-medium">{item.label}</SidebarMenuBadge>}
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="font-normal">Channels</SidebarGroupLabel>
-          <SidebarMenu className="gap-1">
-            {channelItems.map((item) => (
-              <SidebarMenuItem key={item.id}>
-                <SidebarMenuButton className="[&_svg]:size-3.5" size="sm" isActive={item.isActive} tooltip={item.title}>
-                  {item.id in channelBrandIcons ? (
-                    <SimpleIcon icon={channelBrandIcons[item.id as keyof typeof channelBrandIcons]} />
-                  ) : (
-                    <item.icon />
-                  )}
-                  <span className="font-medium">{item.title}</span>
-                </SidebarMenuButton>
-                {item.label && <SidebarMenuBadge className="font-medium">{item.label}</SidebarMenuBadge>}
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="font-normal">Views</SidebarGroupLabel>
-          <SidebarMenu className="gap-1">
-            {viewItems.map((item) => (
-              <SidebarMenuItem key={item.id}>
-                <SidebarMenuButton className="[&_svg]:size-3.5" size="sm" isActive={item.isActive} tooltip={item.title}>
+                <SidebarMenuButton
+                  className="[&_svg]:size-3.5"
+                  size="sm"
+                  isActive={isNavActive(item.id)}
+                  tooltip={item.title}
+                  onClick={() => handleNav(item.id)}
+                >
                   <item.icon />
                   <span className="font-medium">{item.title}</span>
                 </SidebarMenuButton>

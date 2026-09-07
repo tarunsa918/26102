@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { createFileRoute } from "@tanstack/react-router";
 
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -12,13 +14,19 @@ export const Route = createFileRoute("/(main)/chat")({
 });
 
 function Page() {
+  const [query, setQuery] = useState("");
+  const visible = conversations.filter((conversation) => {
+    const haystack = `${conversation.name} ${conversation.subject} ${conversation.preview}`.toLowerCase();
+    return haystack.includes(query.trim().toLowerCase());
+  });
+
   return (
     <div className="[--header-height:calc(--spacing(14))]">
       <SidebarProvider className="flex flex-col">
-        <ChatHeader />
+        <ChatHeader query={query} onQueryChange={setQuery} />
         <div className="flex flex-1">
           <ChatSidebar />
-          <Chat conversations={conversations} />
+          <Chat conversations={visible} />
         </div>
       </SidebarProvider>
     </div>

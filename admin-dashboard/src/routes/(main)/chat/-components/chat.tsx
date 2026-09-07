@@ -9,7 +9,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ChatConversationList } from "./chat-conversation-list";
 import { ChatProfileDetails } from "./chat-profile-details";
 import { ChatThread } from "./chat-thread";
-import type { Conversation } from "./data";
+import { answerCopilot } from "./copilot-brain";
+import { COPILOT_ID, type Conversation, type Message } from "./data";
 import { useChat } from "./use-chat";
 
 interface ChatProps {
@@ -20,10 +21,25 @@ export function Chat({ conversations }: ChatProps) {
   const [chat] = useChat();
   const [showContact, setShowContact] = useState(false);
   const [showThread, setShowThread] = useState(false);
+  const [copilotExtra, setCopilotExtra] = useState<Message[]>([]);
   const isLg = useIsLg();
   const isMobile = useIsMobile();
 
   const activeConversation = conversations.find((c) => c.id === chat.selected) ?? conversations[0];
+  const isCopilot = activeConversation.id === COPILOT_ID;
+  const visibleMessages = isCopilot ? [...activeConversation.messages, ...copilotExtra] : activeConversation.messages;
+
+  function handleSend(text: string) {
+    if (!isCopilot) {
+      return;
+    }
+    const stamp = Date.now();
+    setCopilotExtra((current) => [
+      ...current,
+      { id: stamp, align: "end", text, time: "now" },
+      { id: stamp + 1, align: "start", text: answerCopilot(text), time: "now" },
+    ]);
+  }
 
   return (
     <>
@@ -45,7 +61,8 @@ export function Chat({ conversations }: ChatProps) {
         />
         <ChatThread
           contact={activeConversation.contact}
-          messages={activeConversation.messages}
+          messages={visibleMessages}
+          onSendMessage={isCopilot ? handleSend : undefined}
           showBackButton={isMobile}
           onBack={() => setShowThread(false)}
           onOpenContact={() => setShowContact(true)}
