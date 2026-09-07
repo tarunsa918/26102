@@ -48,6 +48,7 @@ import { Route as mainDashboardlegacyAnalyticsV1RouteRouteImport } from './route
 import { Route as mainDashboardlegacyCrmV1RouteRouteImport } from './routes/(main)/dashboard/(legacy)/crm-v1/route'
 import { Route as mainDashboardlegacyDefaultV1RouteRouteImport } from './routes/(main)/dashboard/(legacy)/default-v1/route'
 import { Route as mainDashboardlegacyFinanceV1RouteRouteImport } from './routes/(main)/dashboard/(legacy)/finance-v1/route'
+import { Route as mainDashboardWorksIndexRouteImport } from './routes/(main)/dashboard/works/index'
 import { Route as mainDashboardWorksWorkIdRouteRouteImport } from './routes/(main)/dashboard/works/$workId/route'
 
 const externalIndexRoute = externalIndexRouteImport.update({
@@ -265,6 +266,11 @@ const mainDashboardlegacyFinanceV1RouteRoute =
     path: '/finance-v1',
     getParentRoute: () => mainDashboardRouteRoute,
   } as any)
+const mainDashboardWorksIndexRoute = mainDashboardWorksIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => mainDashboardWorksRouteRoute,
+} as any)
 const mainDashboardWorksWorkIdRouteRoute =
   mainDashboardWorksWorkIdRouteRouteImport.update({
     id: '/$workId',
@@ -313,6 +319,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/default-v1': typeof mainDashboardlegacyDefaultV1RouteRoute
   '/dashboard/finance-v1': typeof mainDashboardlegacyFinanceV1RouteRoute
   '/dashboard/works/$workId': typeof mainDashboardWorksWorkIdRouteRoute
+  '/dashboard/works/': typeof mainDashboardWorksIndexRoute
 }
 export interface FileRoutesByTo {
   '/chat': typeof mainChatRouteRoute
@@ -342,7 +349,6 @@ export interface FileRoutesByTo {
   '/dashboard/roles': typeof mainDashboardRolesRouteRoute
   '/dashboard/tasks': typeof mainDashboardTasksRouteRoute
   '/dashboard/users': typeof mainDashboardUsersRouteRoute
-  '/dashboard/works': typeof mainDashboardWorksRouteRouteWithChildren
   '/dashboard/$': typeof mainDashboardSplatRoute
   '/dashboard': typeof mainDashboardIndexRoute
   '/auth/v1/login': typeof mainAuthV1LoginRouteRoute
@@ -354,6 +360,7 @@ export interface FileRoutesByTo {
   '/dashboard/default-v1': typeof mainDashboardlegacyDefaultV1RouteRoute
   '/dashboard/finance-v1': typeof mainDashboardlegacyFinanceV1RouteRoute
   '/dashboard/works/$workId': typeof mainDashboardWorksWorkIdRouteRoute
+  '/dashboard/works': typeof mainDashboardWorksIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -397,6 +404,7 @@ export interface FileRoutesById {
   '/(main)/dashboard/(legacy)/default-v1': typeof mainDashboardlegacyDefaultV1RouteRoute
   '/(main)/dashboard/(legacy)/finance-v1': typeof mainDashboardlegacyFinanceV1RouteRoute
   '/(main)/dashboard/works/$workId': typeof mainDashboardWorksWorkIdRouteRoute
+  '/(main)/dashboard/works/': typeof mainDashboardWorksIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -441,6 +449,7 @@ export interface FileRouteTypes {
     | '/dashboard/default-v1'
     | '/dashboard/finance-v1'
     | '/dashboard/works/$workId'
+    | '/dashboard/works/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/chat'
@@ -470,7 +479,6 @@ export interface FileRouteTypes {
     | '/dashboard/roles'
     | '/dashboard/tasks'
     | '/dashboard/users'
-    | '/dashboard/works'
     | '/dashboard/$'
     | '/dashboard'
     | '/auth/v1/login'
@@ -482,6 +490,7 @@ export interface FileRouteTypes {
     | '/dashboard/default-v1'
     | '/dashboard/finance-v1'
     | '/dashboard/works/$workId'
+    | '/dashboard/works'
   id:
     | '__root__'
     | '/(main)/chat'
@@ -524,6 +533,7 @@ export interface FileRouteTypes {
     | '/(main)/dashboard/(legacy)/default-v1'
     | '/(main)/dashboard/(legacy)/finance-v1'
     | '/(main)/dashboard/works/$workId'
+    | '/(main)/dashboard/works/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -812,6 +822,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardlegacyFinanceV1RouteRouteImport
       parentRoute: typeof mainDashboardRouteRoute
     }
+    '/(main)/dashboard/works/': {
+      id: '/(main)/dashboard/works/'
+      path: '/'
+      fullPath: '/dashboard/works/'
+      preLoaderRoute: typeof mainDashboardWorksIndexRouteImport
+      parentRoute: typeof mainDashboardWorksRouteRoute
+    }
     '/(main)/dashboard/works/$workId': {
       id: '/(main)/dashboard/works/$workId'
       path: '/$workId'
@@ -824,11 +841,13 @@ declare module '@tanstack/react-router' {
 
 interface mainDashboardWorksRouteRouteChildren {
   mainDashboardWorksWorkIdRouteRoute: typeof mainDashboardWorksWorkIdRouteRoute
+  mainDashboardWorksIndexRoute: typeof mainDashboardWorksIndexRoute
 }
 
 const mainDashboardWorksRouteRouteChildren: mainDashboardWorksRouteRouteChildren =
   {
     mainDashboardWorksWorkIdRouteRoute: mainDashboardWorksWorkIdRouteRoute,
+    mainDashboardWorksIndexRoute: mainDashboardWorksIndexRoute,
   }
 
 const mainDashboardWorksRouteRouteWithChildren =
