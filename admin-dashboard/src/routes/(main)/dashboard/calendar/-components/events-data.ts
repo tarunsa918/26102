@@ -1,22 +1,72 @@
-import { setDate, setHours, setMinutes, startOfMonth } from "date-fns";
+import { addDays } from "date-fns";
 
-const monthStart = startOfMonth(new Date());
-const currentYear = new Date().getFullYear();
-const d = (day: number) => setDate(monthStart, day);
-const dt = (day: number, hour: number, min = 0) => setMinutes(setHours(setDate(monthStart, day), hour), min);
+import { anomalies, FLAGSHIP_WORK_ID, works } from "@/lib/mplads-mock";
 
-export const demoEvents = [
-  { title: "Monthly planning", start: dt(1, 9, 30), end: dt(1, 10, 30) },
-  { title: "Design review", start: dt(3, 11), end: dt(3, 12) },
-  { title: "Client check-in", start: dt(4, 15), end: dt(4, 15, 45) },
-  { title: "Product workshop", start: d(7), end: d(9), allDay: true },
-  { groupId: "standup", title: "Team standup", start: dt(9, 10) },
-  { title: "Finance sync", start: dt(10, 14, 30), end: dt(10, 15) },
-  { title: "Focus block", start: dt(12, 9), end: dt(12, 12), display: "background" },
-  { title: "Sprint planning", start: dt(15, 9, 30), end: dt(15, 11) },
-  { groupId: "standup", title: "Team standup", start: dt(16, 10) },
-  { title: "Ops handoff", start: dt(18, 16), end: dt(18, 16, 45) },
-  { title: "Quarterly report due", start: d(24), allDay: true },
-  { title: "Reset day", start: d(28), allDay: true },
-  { title: "Team Member Birthday", start: new Date(currentYear, 8, 6), allDay: true },
-];
+export type DeadlineKind = "due" | "review" | "milestone";
+
+export interface MpladsCalendarEvent {
+  title: string;
+  start: Date;
+  allDay: boolean;
+  url: string;
+  extendedProps: { calendar: DeadlineKind; workId: string };
+}
+
+function parseDay(yyyyMmDd: string): Date {
+  const [y, m, d] = yyyyMmDd.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function dossierUrl(workId: string): string {
+  return `/dashboard/works/${workId}?tab=anomalies&view=grid&lens=all&state=&district=&type=&q=`;
+}
+
+function dueEvents(): MpladsCalendarEvent[] {
+  return works.map((work) => ({
+    title: `Due: ${work.id} — ${work.title}`,
+    start: parseDay(work.dueDate),
+    allDay: true,
+    url: dossierUrl(work.id),
+    extendedProps: { calendar: "due", workId: work.id },
+  }));
+}
+
+function reviewEvents(): MpladsCalendarEvent[] {
+  const flaggedIds = [...new Set(anomalies.map((anomaly) => anomaly.workId))];
+  return flaggedIds
+    .map((workId): MpladsCalendarEvent | undefined => {
+      const work = works.find((candidate) => candidate.id === workId);
+      if (!work) {
+        return undefined;
+      }
+      return {
+        title: `Review: ${work.id} 90d check`,
+        start: addDays(parseDay(work.lastUpdate), 90),
+        allDay: true,
+        url: dossierUrl(work.id),
+        extendedProps: { calendar: "review", workId: work.id },
+      };
+    })
+    .filter((event): event is MpladsCalendarEvent => Boolean(event));
+}
+
+const MILESTONE_NAMES = ["Foundation", "Lintel", "Roofing", "Finishing"];
+
+function flagshipMilestones(): MpladsCalendarEvent[] {
+  const flagship = works.find((work) => work.id === FLAGSHIP_WORK_ID);
+  if (!flagship) {
+    return [];
+  }
+  const start = parseDay(flagship.sanctionDate).getTime();
+  const end = parseDay(flagship.dueDate).getTime();
+  const span = Math.max(end - start, 1);
+  return MILESTONE_NAMES.map((name, index) => ({
+    title: `${name}: ${flagship.id}`,
+    start: new Date(start + (span * (index + 1)) / MILESTONE_NAMES.length),
+    allDay: true,
+    url: dossierUrl(flagship.id),
+    extendedProps: { calendar: "milestone", workId: flagship.id },
+  }));
+}
+
+export const mpladsEvents: MpladsCalendarEvent[] = [...dueEvents(), ...reviewEvents(), ...flagshipMilestones()];

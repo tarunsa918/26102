@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import { cn } from "cn";
 import { Star } from "lucide-react";
 
@@ -9,15 +7,20 @@ import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle }
 import { type FileManagerFile, fileIcons, fileKindLabels } from "./data";
 import { FileActions } from "./file-actions";
 
-export function FileGridView({ files }: { files: FileManagerFile[] }) {
-  const [gridFiles, setGridFiles] = useState(files);
-  const toggleStar = (fileId: string) =>
-    setGridFiles((current) => current.map((file) => (file.id === fileId ? { ...file, starred: !file.starred } : file)));
+interface FileGridViewProps {
+  files: FileManagerFile[];
+  starred: ReadonlySet<string>;
+  onToggleStar: (fileId: string) => void;
+  onRemove: (fileId: string) => void;
+}
 
+export function FileGridView({ files, starred, onToggleStar, onRemove }: FileGridViewProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {gridFiles.map((file) => {
+      {files.map((file) => {
         const FileIcon = fileIcons[file.kind];
+        const isStarred = starred.has(file.id) || file.starred;
+        const starredFile = { ...file, starred: isStarred };
         return (
           <Card key={file.id} size="sm" className="group/file">
             <CardContent>
@@ -28,12 +31,12 @@ export function FileGridView({ files }: { files: FileManagerFile[] }) {
                   size="icon-sm"
                   className={cn(
                     "absolute top-2 right-2 opacity-0 focus-visible:opacity-100 group-hover/file:opacity-100",
-                    file.starred && "opacity-100",
+                    isStarred && "opacity-100",
                   )}
-                  aria-label={file.starred ? `Unstar ${file.name}` : `Star ${file.name}`}
-                  onClick={() => toggleStar(file.id)}
+                  aria-label={isStarred ? `Unstar ${file.name}` : `Star ${file.name}`}
+                  onClick={() => onToggleStar(file.id)}
                 >
-                  <Star className={cn(file.starred && "fill-current")} />
+                  <Star className={cn(isStarred && "fill-current")} />
                 </Button>
                 <div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-3 text-muted-foreground text-xs">
                   <span>{fileKindLabels[file.kind]}</span>
@@ -44,10 +47,14 @@ export function FileGridView({ files }: { files: FileManagerFile[] }) {
             <CardHeader>
               <CardTitle className="truncate">{file.name}</CardTitle>
               <CardDescription className="truncate">
-                Modified {file.modifiedAt} by {file.owner}
+                {file.workId} · {file.workTitle} · {file.modifiedAt}
               </CardDescription>
               <CardAction>
-                <FileActions file={file} onToggleStar={() => toggleStar(file.id)} />
+                <FileActions
+                  file={starredFile}
+                  onToggleStar={() => onToggleStar(file.id)}
+                  onRemove={() => onRemove(file.id)}
+                />
               </CardAction>
             </CardHeader>
           </Card>

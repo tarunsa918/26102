@@ -10,7 +10,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-import type { InvoiceFormValues } from "./data";
+import type { UCFormValues } from "./data";
 
 const dateFields: Array<{
   id: string;
@@ -19,7 +19,7 @@ const dateFields: Array<{
 }> = [
   {
     id: "issued-date",
-    label: "Issued Date",
+    label: "Sanction Date",
     name: "issuedDate",
   },
   {
@@ -30,14 +30,14 @@ const dateFields: Array<{
 ];
 
 export function InvoiceDetails() {
-  const { control, register } = useFormContext<InvoiceFormValues>();
+  const { control, register } = useFormContext<UCFormValues>();
 
   return (
     <section className="flex flex-col gap-3">
       <FieldGroup>
         <Field className="gap-1">
           <FieldLabel className="text-xs" htmlFor="reference-number">
-            Reference Number
+            UC Reference
           </FieldLabel>
           <InputGroup>
             <InputGroupInput id="reference-number" {...register("referenceNumber")} />

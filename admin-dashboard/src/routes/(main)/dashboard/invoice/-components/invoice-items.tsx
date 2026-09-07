@@ -10,10 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils";
 
-import { getLineAmount, type InvoiceFormValues, type InvoiceLineItem } from "./data";
+import { getLineAmount, type UCFormValues, type UCTranche } from "./data";
 
 export function InvoiceItems() {
-  const { control, register } = useFormContext<InvoiceFormValues>();
+  const { control, register } = useFormContext<UCFormValues>();
   const { append, fields, move, remove } = useFieldArray({
     control,
     name: "items",
@@ -31,16 +31,16 @@ export function InvoiceItems() {
   }
 
   function handleAddItem() {
-    append({ id: `item-${Date.now()}`, description: "", quantity: 1, unitPrice: 0 });
+    append({ id: `tranche-${Date.now()}`, description: "", quantity: 1, unitPrice: 0 });
   }
 
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="font-medium tracking-tight">Invoice Items</h2>
+        <h2 className="font-medium tracking-tight">Fund tranches</h2>
         <Button type="button" variant="ghost" size="sm" onClick={handleAddItem}>
           <Plus data-icon="inline-start" />
-          Add Item
+          Add Tranche
         </Button>
       </div>
 
@@ -82,8 +82,8 @@ function SortableInvoiceItemRow({
 }: {
   id: string;
   index: number;
-  item?: InvoiceLineItem;
-  register: UseFormRegister<InvoiceFormValues>;
+  item?: UCTranche;
+  register: UseFormRegister<UCFormValues>;
   onRemove: () => void;
 }) {
   const { handleRef, isDragging, ref } = useSortable({
@@ -152,6 +152,8 @@ function SortableInvoiceItemRow({
 
 function formatInvoiceCurrency(value: number) {
   return formatCurrency(Number.isFinite(value) ? value : 0, {
+    currency: "INR",
+    locale: "en-IN",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });

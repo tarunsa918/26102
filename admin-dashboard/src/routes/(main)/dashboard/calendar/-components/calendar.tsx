@@ -7,14 +7,14 @@ import listPlugin from "@fullcalendar/react/list";
 import multiMonthPlugin from "@fullcalendar/react/multimonth";
 import timeGridPlugin from "@fullcalendar/react/timegrid";
 import { differenceInCalendarDays, endOfMonth, format, startOfMonth } from "date-fns";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, XIcon } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, XIcon } from "lucide-react";
 
 import { EventCalendarViews } from "@/components/calendar/event-calendar-views";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import { demoEvents } from "./events-data";
+import { mpladsEvents } from "./events-data";
 
 const views = [
   { value: "dayGridMonth", label: "Month" },
@@ -23,11 +23,10 @@ const views = [
 ];
 
 const calendars = [
-  { value: "all", label: "All calendars" },
-  { value: "work", label: "Work" },
-  { value: "personal", label: "Personal" },
-  { value: "team", label: "Team" },
-  { value: "focus", label: "Focus time" },
+  { value: "all", label: "All deadlines" },
+  { value: "due", label: "Due dates" },
+  { value: "review", label: "Reviews (90d)" },
+  { value: "milestone", label: "Flagship milestones" },
 ];
 
 const plugins = [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin, multiMonthPlugin];
@@ -46,6 +45,10 @@ export function Calendar() {
   });
   const title = dateInfo.title;
   const days = dateInfo.days;
+  const visibleEvents =
+    selectedCalendar === "all"
+      ? mpladsEvents
+      : mpladsEvents.filter((event) => event.extendedProps.calendar === selectedCalendar);
 
   return (
     <div className="flex flex-col overflow-hidden rounded-md border">
@@ -110,10 +113,6 @@ export function Calendar() {
               </SelectGroup>
             </SelectContent>
           </Select>
-          <Button>
-            <Plus />
-            Add event
-          </Button>
         </div>
       </div>
 
@@ -122,7 +121,7 @@ export function Calendar() {
         initialView={views[0].value}
         plugins={[...plugins]}
         popoverCloseContent={() => <XIcon className="size-5 text-muted-foreground group-hover:text-foreground" />}
-        events={demoEvents}
+        events={visibleEvents}
         nowIndicator
         datesSet={(info) => {
           setDateInfo({
@@ -130,7 +129,7 @@ export function Calendar() {
             days: differenceInCalendarDays(info.view.currentEnd, info.view.currentStart),
           });
           setEventCount(
-            demoEvents.filter((event) => {
+            visibleEvents.filter((event) => {
               const start = new Date(event.start);
 
               return start >= info.start && start < info.end;

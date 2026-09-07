@@ -1,22 +1,18 @@
 import { formatCurrency } from "@/lib/utils";
 
 import {
-  getInvoiceDiscount,
-  getInvoiceItems,
-  getInvoiceSubtotal,
-  getInvoiceTax,
-  getInvoiceTaxOption,
-  getInvoiceTotal,
   getLineAmount,
+  getUCSubtotal,
+  getUCTotal,
+  getUCTranches,
   INVOICE_PAPER_HEIGHT,
   INVOICE_PAPER_WIDTH,
-  type InvoiceFormValues,
+  type UCFormValues,
+  ucWorks,
 } from "./data";
 
-export function InvoicePaper({ invoice }: { invoice: InvoiceFormValues }) {
-  const taxOption = getInvoiceTaxOption(invoice);
-  const discountValue = Number.isFinite(invoice.discountValue) ? invoice.discountValue : 0;
-  const discountLabel = invoice.discountType === "percent" ? `Discount ${discountValue}%` : "Discount";
+export function InvoicePaper({ invoice }: { invoice: UCFormValues }) {
+  const work = ucWorks.find((option) => option.id === invoice.workId) ?? ucWorks[0];
 
   return (
     <article
@@ -32,38 +28,38 @@ export function InvoicePaper({ invoice }: { invoice: InvoiceFormValues }) {
             <rect y="28" width="20" height="20" rx="3" fill="currentColor" />
             <rect x="28" y="28" width="20" height="20" rx="3" fill="currentColor" />
           </svg>
-          <h2 className="text-4xl uppercase tracking-widest">Invoice</h2>
+          <h2 className="text-4xl uppercase tracking-widest">Utilisation Certificate</h2>
         </div>
 
         <section className="grid grid-cols-2 gap-14 text-sm leading-relaxed">
           <div>
             <p>Reference: {invoice.referenceNumber}</p>
-            <p>Issued: {invoice.issuedDate}</p>
-            <p>Payment due: {invoice.paymentDueDate}</p>
+            <p>Sanctioned: {invoice.issuedDate}</p>
+            <p>Due: {invoice.paymentDueDate}</p>
           </div>
           <div>
-            <p>Payment account</p>
-            <p>{invoice.from.paymentAccountName}</p>
-            <p>Routing no. {invoice.from.routingNumber}</p>
+            <p>UC status</p>
+            <p>{invoice.status === "pending" ? "PENDING" : "RECEIVED"}</p>
+            <p>Work {work.id}</p>
           </div>
         </section>
 
         <section className="grid grid-cols-2 gap-14 text-sm leading-relaxed">
           <div>
-            <p className="mb-4 font-semibold uppercase">From</p>
-            <p>{invoice.from.name}</p>
-            {invoice.from.addressLines.map((line) => (
-              <p key={line}>{line}</p>
-            ))}
-            <p>Tax ID: {invoice.from.taxId}</p>
+            <p className="mb-4 font-semibold uppercase">Work</p>
+            <p>
+              {work.id} — {work.title}
+            </p>
+            <p>
+              {work.district}, {work.state}
+            </p>
+            <p>Status: {work.status}</p>
           </div>
           <div>
-            <p className="mb-4 font-semibold uppercase">Bill to</p>
-            <p>{invoice.to.name}</p>
-            {invoice.to.addressLines.map((line) => (
-              <p key={line}>{line}</p>
-            ))}
-            <p>Tax ID: {invoice.to.taxId}</p>
+            <p className="mb-4 font-semibold uppercase">Agency</p>
+            <p>{work.agency}</p>
+            <p>Sanctioned {work.sanctionedLakh.toFixed(1)}L</p>
+            <p>Expenditure {work.expenditureLakh.toFixed(1)}L</p>
           </div>
         </section>
       </header>
@@ -76,7 +72,7 @@ export function InvoicePaper({ invoice }: { invoice: InvoiceFormValues }) {
             <span className="text-right">Unit cost</span>
             <span className="text-right">Line total</span>
           </div>
-          {getInvoiceItems(invoice).map((item) => (
+          {getUCTranches(invoice).map((item) => (
             <div
               key={item.id}
               className="grid grid-cols-[1fr_74px_116px_116px] border-[oklch(0.86_0_0)] border-b px-3 py-4"
@@ -93,24 +89,14 @@ export function InvoicePaper({ invoice }: { invoice: InvoiceFormValues }) {
           <section className="col-start-2 space-y-2">
             <div>
               <div className="flex justify-between gap-8">
-                <span>Net amount</span>
-                <span>{formatInvoiceCurrency(getInvoiceSubtotal(invoice))}</span>
-              </div>
-              <div className="flex justify-between gap-8">
-                <span>{discountLabel}</span>
-                <span>{formatInvoiceCurrency(getInvoiceDiscount(invoice))}</span>
-              </div>
-              <div className="flex justify-between gap-8">
-                <span>
-                  {taxOption.name} {taxOption.rate}%
-                </span>
-                <span>{formatInvoiceCurrency(getInvoiceTax(invoice))}</span>
+                <span>Sanctioned total</span>
+                <span>{formatInvoiceCurrency(getUCSubtotal(invoice))}</span>
               </div>
             </div>
             <div className="border-current border-y-2 py-3">
               <div className="flex justify-between gap-8">
-                <span className="font-semibold uppercase">Balance due</span>
-                <span className="font-semibold">{formatInvoiceCurrency(getInvoiceTotal(invoice))}</span>
+                <span className="font-semibold uppercase">Total accounted</span>
+                <span className="font-semibold">{formatInvoiceCurrency(getUCTotal(invoice))}</span>
               </div>
             </div>
           </section>
@@ -119,13 +105,15 @@ export function InvoicePaper({ invoice }: { invoice: InvoiceFormValues }) {
 
       <footer className="absolute right-12.25 bottom-11 left-12.25 grid grid-cols-2 gap-14 text-neutral-500 text-sm leading-relaxed">
         <div>
-          <p>{invoice.from.email}</p>
-          <p>{invoice.from.phone}</p>
-          <p>{invoice.from.website}</p>
+          <p>
+            {work.district}, {work.state}
+          </p>
+          <p>Agency: {work.agency}</p>
+          <p>Reference {invoice.referenceNumber}</p>
         </div>
         <div>
           <p>Prepared for prompt processing.</p>
-          <p>Issued by {invoice.from.issuerName}</p>
+          <p>UC {invoice.status === "pending" ? "pending for last tranche" : "received (demo)"}</p>
         </div>
       </footer>
     </article>
@@ -134,6 +122,8 @@ export function InvoicePaper({ invoice }: { invoice: InvoiceFormValues }) {
 
 function formatInvoiceCurrency(value: number) {
   return formatCurrency(Number.isFinite(value) ? value : 0, {
+    currency: "INR",
+    locale: "en-IN",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
