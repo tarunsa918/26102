@@ -1,28 +1,29 @@
+import { useState } from "react";
+
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { AnalyticsKpiStrip } from "./-components/analytics-kpi-strip";
-import { AnalyticsToolbar } from "./-components/analytics-toolbar";
+import { type AnalyticsRange, AnalyticsToolbar } from "./-components/analytics-toolbar";
 import { RealtimeVisitors } from "./-components/realtime-visitors";
 import { TopPages } from "./-components/top-pages";
 import { TopTrafficSources } from "./-components/top-traffic-sources";
 import { TrafficQuality } from "./-components/traffic-quality";
-
-// Import this stylesheet in any page or component that renders country flag classes.
-import "@/styles/flag-icons/flags.css";
 
 export const Route = createFileRoute("/(main)/dashboard/analytics")({
   component: Page,
 });
 
 function Page() {
+  const [range, setRange] = useState<AnalyticsRange>("all");
+
   return (
     <div className="flex flex-col gap-4">
       <div className="space-y-1">
-        <h1 className="text-3xl tracking-tight">Hello, Aiy</h1>
+        <h1 className="text-3xl tracking-tight">Scheme performance</h1>
         <p className="text-muted-foreground text-sm">
-          Monitor traffic, engagement, and conversion performance in one view.
+          Are delays and stalls growing? Where is risk? Demo sample of 40 works.
         </p>
       </div>
 
@@ -30,13 +31,13 @@ function Page() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <TabsList className="gap-1">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="audience">Audience</TabsTrigger>
-            <TabsTrigger value="acquisition">Acquisition</TabsTrigger>
-            <TabsTrigger value="engagement">Engagement</TabsTrigger>
-            <TabsTrigger value="conversions">Conversions</TabsTrigger>
+            <TabsTrigger value="audience">Delays</TabsTrigger>
+            <TabsTrigger value="acquisition">Risk</TabsTrigger>
+            <TabsTrigger value="engagement">Stalls</TabsTrigger>
+            <TabsTrigger value="conversions">Funds</TabsTrigger>
           </TabsList>
 
-          <AnalyticsToolbar />
+          <AnalyticsToolbar range={range} onRangeChange={setRange} />
         </div>
 
         <TabsContent value="overview" className="flex flex-col gap-4">
@@ -44,7 +45,7 @@ function Page() {
 
           <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-12">
             <div className="xl:col-span-7">
-              <TrafficQuality />
+              <TrafficQuality range={range} />
             </div>
             <div className="xl:col-span-5">
               <RealtimeVisitors />
@@ -63,25 +64,25 @@ function Page() {
 
         <TabsContent value="audience">
           <div className="flex h-64 items-center justify-center rounded-xl border border-border border-dashed text-muted-foreground">
-            Audience view coming soon.
+            Delay deep-dive coming soon.
           </div>
         </TabsContent>
 
         <TabsContent value="acquisition">
           <div className="flex h-64 items-center justify-center rounded-xl border border-border border-dashed text-muted-foreground">
-            Acquisition view coming soon.
+            Risk deep-dive coming soon.
           </div>
         </TabsContent>
 
         <TabsContent value="engagement">
           <div className="flex h-64 items-center justify-center rounded-xl border border-border border-dashed text-muted-foreground">
-            Engagement view coming soon.
+            Stall deep-dive coming soon.
           </div>
         </TabsContent>
 
         <TabsContent value="conversions">
           <div className="flex h-64 items-center justify-center rounded-xl border border-border border-dashed text-muted-foreground">
-            Conversions view coming soon.
+            Fund deep-dive coming soon.
           </div>
         </TabsContent>
       </Tabs>

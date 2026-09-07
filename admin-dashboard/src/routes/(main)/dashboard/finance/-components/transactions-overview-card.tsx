@@ -1,93 +1,125 @@
+import { useMemo, useState } from "react";
+
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatCurrency } from "@/lib/utils";
+import { formatLakh, works } from "@/lib/mplads-mock";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const weekStart = Date.UTC(2026, 0, 5);
 
-const chartData = [
-  { date: "2026-01-05T02:24:00Z", expense: 23, income: 38 },
-  { date: "2026-01-05T08:24:00Z", expense: 32 },
-  { date: "2026-01-05T14:52:48Z", expense: 26 },
-  { date: "2026-01-05T21:07:12Z", expense: 39 },
-  { date: "2026-01-06T03:36:00Z", expense: 37 },
-  { date: "2026-01-06T10:04:48Z", expense: 52 },
-  { date: "2026-01-06T16:19:12Z", expense: 15 },
-  { date: "2026-01-06T22:04:48Z", expense: 36 },
-  { date: "2026-01-07T03:50:24Z", expense: 31 },
-  { date: "2026-01-07T09:36:00Z", expense: 45, income: 44 },
-  { date: "2026-01-07T15:21:36Z", expense: 53 },
-  { date: "2026-01-07T21:07:12Z", expense: 40 },
-  { date: "2026-01-08T02:52:48Z", expense: 26 },
-  { date: "2026-01-08T08:24:00Z", expense: 42 },
-  { date: "2026-01-08T13:55:12Z", expense: 47 },
-  { date: "2026-01-08T19:40:48Z", expense: 50 },
-  { date: "2026-01-09T01:12:00Z", expense: 34 },
-  { date: "2026-01-09T06:43:12Z", expense: 53 },
-  { date: "2026-01-09T12:28:48Z", expense: 44 },
-  { date: "2026-01-09T18:00:00Z", expense: 70 },
-  { date: "2026-01-09T23:31:12Z", expense: 50 },
-  { date: "2026-01-10T04:48:00Z", expense: 51 },
-  { date: "2026-01-10T10:04:48Z", expense: 34, income: 54 },
-  { date: "2026-01-10T15:21:36Z", expense: 39 },
-  { date: "2026-01-10T20:38:24Z", expense: 30 },
-  { date: "2026-01-11T01:55:12Z", expense: 50 },
-  { date: "2026-01-11T07:12:00Z", expense: 48 },
-  { date: "2026-01-11T12:28:48Z", expense: 67 },
-  { date: "2026-01-11T17:45:36Z", expense: 33 },
-  { date: "2026-01-11T22:04:48Z", expense: 53, income: 58 },
-].map((item: { date: string; expense: number; income?: number }) => ({
-  date: item.date,
-  expense: item.expense,
-  income: item.income,
-  timestamp: Date.parse(item.date),
-}));
+interface MonthPoint {
+  key: string;
+  timestamp: number;
+  plan: number;
+  released: number;
+  cumPlan: number;
+  cumReleased: number;
+}
 
-const weekdayTicks = Array.from({ length: 7 }, (_, index) => weekStart + (index + 0.5) * DAY_MS);
+function buildSeries(): MonthPoint[] {
+  const byMonth = new Map<string, { plan: number; released: number }>();
+  for (const w of works) {
+    const key = w.sanctionDate.slice(0, 7);
+    const entry = byMonth.get(key) ?? { plan: 0, released: 0 };
+    entry.plan += w.sanctionedLakh;
+    entry.released += w.expenditureLakh;
+    byMonth.set(key, entry);
+  }
+  const keys = [...byMonth.keys()].sort();
+  let cumPlan = 0;
+  let cumReleased = 0;
+  return keys.map((key) => {
+    const entry = byMonth.get(key) ?? { plan: 0, released: 0 };
+    cumPlan += entry.plan;
+    cumReleased += entry.released;
+    const [y, m] = key.split("-").map(Number);
+    return {
+      key,
+      timestamp: Date.UTC(y, m - 1, 1),
+      plan: entry.plan,
+      released: entry.released,
+      cumPlan,
+      cumReleased,
+    };
+  });
+}
 
-const weekdayFormatter = new Intl.DateTimeFormat("en-US", {
+const monthFormatter = new Intl.DateTimeFormat("en-IN", {
   timeZone: "UTC",
-  weekday: "long",
+  month: "short",
+  year: "2-digit",
 });
 
-const formatWeekday = (value: number) => weekdayFormatter.format(new Date(value));
+const formatMonth = (value: number) => monthFormatter.format(new Date(value));
 
-const chartDomain = [weekStart, weekStart + 7 * DAY_MS];
-const formatTooltipCurrency = (value: number | string) => formatCurrency(Number(value), { noDecimals: true });
+const formatTooltipLakh = (value: number | string) => formatLakh(Number(value));
 
 const chartConfig = {
-  expense: {
+  released: {
     color: "var(--chart-4)",
-    label: "Expense",
+    label: "Released",
   },
-  income: {
+  plan: {
     color: "var(--chart-2)",
-    label: "Income",
+    label: "Plan",
   },
 } satisfies ChartConfig;
 
-const transactionPeriodItems = [
-  { value: "weekly", label: "Weekly" },
+const releaseViewItems = [
+  { value: "cumulative", label: "Cumulative" },
   { value: "monthly", label: "Monthly" },
-  { value: "yearly", label: "Yearly" },
 ] as const;
 
+type ReleaseView = (typeof releaseViewItems)[number]["value"];
+
 export function TransactionsOverviewCard() {
+  const [view, setView] = useState<ReleaseView>("cumulative");
+  const series = useMemo(() => buildSeries(), []);
+  const chartData = useMemo(
+    () =>
+      series.map((point) => ({
+        timestamp: point.timestamp,
+        label: point.key,
+        released: view === "cumulative" ? point.cumReleased : point.released,
+        plan: view === "cumulative" ? point.cumPlan : point.plan,
+      })),
+    [series, view],
+  );
+  const ticks = useMemo(
+    () =>
+      series
+        .filter(
+          (point) =>
+            point.key.endsWith("-01") ||
+            point.key.endsWith("-04") ||
+            point.key.endsWith("-07") ||
+            point.key.endsWith("-10"),
+        )
+        .map((point) => point.timestamp),
+    [series],
+  );
+  const domain = useMemo(
+    () =>
+      chartData.length > 0
+        ? [chartData[0].timestamp, chartData[chartData.length - 1].timestamp + 30 * DAY_MS]
+        : undefined,
+    [chartData],
+  );
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-normal">Spending Overview</CardTitle>
+        <CardTitle className="font-normal">Releases vs plan</CardTitle>
         <CardAction>
-          <Select defaultValue="weekly" items={transactionPeriodItems}>
-            <SelectTrigger className="w-28" size="sm">
+          <Select items={releaseViewItems} value={view} onValueChange={(value) => setView(value as ReleaseView)}>
+            <SelectTrigger className="w-32" size="sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                {transactionPeriodItems.map((item) => (
+                {releaseViewItems.map((item) => (
                   <SelectItem key={item.value} value={item.value}>
                     {item.label}
                   </SelectItem>
@@ -99,18 +131,21 @@ export function TransactionsOverviewCard() {
       </CardHeader>
 
       <CardContent>
+        <p className="pb-2 text-muted-foreground text-xs">
+          Cumulative sanctioned (plan, dashed) vs released (solid) by sanction month · demo-derived from 40 works.
+        </p>
         <ChartContainer config={chartConfig} className="h-50 w-full">
           <LineChart accessibilityLayer data={chartData} margin={{ bottom: 0, left: 0, right: 0, top: 0 }}>
             <CartesianGrid vertical={false} />
             <XAxis
               axisLine={false}
               dataKey="timestamp"
-              domain={chartDomain}
+              domain={domain}
               scale="time"
-              tickFormatter={formatWeekday}
+              tickFormatter={formatMonth}
               tickLine={false}
               tickMargin={10}
-              ticks={weekdayTicks}
+              ticks={ticks}
               tick={{ fontSize: 12 }}
               type="number"
             />
@@ -124,25 +159,25 @@ export function TransactionsOverviewCard() {
                   label={label}
                   payload={payload?.map((item) => ({
                     ...item,
-                    value: typeof item.value === "number" ? formatTooltipCurrency(item.value) : item.value,
+                    value: typeof item.value === "number" ? formatTooltipLakh(item.value) : item.value,
                   }))}
                 />
               )}
             />
             <Line
               connectNulls
-              dataKey="income"
+              dataKey="plan"
               dot={false}
-              stroke="var(--color-income)"
+              stroke="var(--color-plan)"
               strokeDasharray="5 5"
               strokeLinecap="round"
               strokeWidth={1}
               type="linear"
             />
             <Line
-              dataKey="expense"
+              dataKey="released"
               dot={false}
-              stroke="var(--color-expense)"
+              stroke="var(--color-released)"
               strokeLinecap="round"
               strokeWidth={3}
               type="linear"

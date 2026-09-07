@@ -1,122 +1,69 @@
-import * as React from "react";
-
 import { Label, Pie, PieChart } from "recharts";
 
+import { Badge } from "@/components/ui/badge";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatCurrency } from "@/lib/utils";
+import { formatLakh, works } from "@/lib/mplads-mock";
 
-type BalanceKey = "investment" | "main" | "reserve" | "savings";
+type FundKey = "released" | "balance";
 
-const balanceData: {
+const sanctioned = works.reduce((total, w) => total + w.sanctionedLakh, 0);
+const spent = works.reduce((total, w) => total + w.expenditureLakh, 0);
+const balance = sanctioned - spent;
+
+const fundData: {
   account: string;
   amount: number;
-  key: BalanceKey;
+  key: FundKey;
   percentage: number;
 }[] = [
   {
-    account: "Main Wallet",
-    amount: 122_540,
-    key: "main",
-    percentage: 52.2,
+    account: "Released · spent",
+    amount: spent,
+    key: "released",
+    percentage: (spent / sanctioned) * 100,
   },
   {
-    account: "Savings Account",
-    amount: 48_320,
-    key: "savings",
-    percentage: 20.6,
-  },
-  {
-    account: "Investment Account",
-    amount: 36_780,
-    key: "investment",
-    percentage: 15.7,
-  },
-  {
-    account: "Reserve Account",
-    amount: 27_256,
-    key: "reserve",
-    percentage: 11.5,
+    account: "Balance · unspent",
+    amount: balance,
+    key: "balance",
+    percentage: (balance / sanctioned) * 100,
   },
 ];
 
 const chartConfig = {
   amount: {
-    label: "Balance",
+    label: "Funds",
   },
-  investment: {
-    color: "var(--chart-1)",
-    label: "Investment Account",
-  },
-  main: {
+  released: {
     color: "var(--chart-2)",
-    label: "Main Wallet",
+    label: "Released · spent",
   },
-  reserve: {
+  balance: {
     color: "var(--chart-3)",
-    label: "Reserve Account",
-  },
-  savings: {
-    color: "var(--chart-4)",
-    label: "Savings Account",
+    label: "Balance · unspent",
   },
 } satisfies ChartConfig;
 
-const currencies = {
-  EUR: {
-    label: "Euro Balance",
-  },
-  GBP: {
-    label: "GBP Balance",
-  },
-  USD: {
-    label: "USD Balance",
-  },
-} as const;
-
-type Currency = keyof typeof currencies;
-
-const currencyItems = Object.entries(currencies).map(([value, item]) => ({
-  value,
-  label: item.label,
-}));
-
-const getAccountColor = (key: BalanceKey) => {
+const getAccountColor = (key: FundKey) => {
   const config = chartConfig[key];
 
   return "color" in config ? config.color : undefined;
 };
 
-const chartData = balanceData.map((item) => ({
+const chartData = fundData.map((item) => ({
   ...item,
+  percentage: item.percentage.toFixed(1),
   fill: getAccountColor(item.key),
 }));
 
-const totalBalance = balanceData.reduce((total, item) => total + item.amount, 0);
-
 export function BalanceDistributionCard() {
-  const [currency, setCurrency] = React.useState<Currency>("USD");
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-normal">Account Allocation</CardTitle>
+        <CardTitle className="font-normal">Fund allocation</CardTitle>
         <CardAction>
-          <Select items={currencyItems} onValueChange={(value) => setCurrency(value as Currency)} value={currency}>
-            <SelectTrigger className="w-36" size="sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {currencyItems.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+          <Badge variant="outline">Demo · {works.length} works</Badge>
         </CardAction>
       </CardHeader>
 
@@ -146,14 +93,14 @@ export function BalanceDistributionCard() {
                   return (
                     <text dominantBaseline="middle" textAnchor="middle" x={viewBox.cx} y={viewBox.cy}>
                       <tspan className="fill-muted-foreground text-xs" x={viewBox.cx} y={(viewBox.cy ?? 0) - 8}>
-                        Total
+                        Sanctioned
                       </tspan>
                       <tspan
                         className="fill-foreground font-heading font-medium text-lg tabular-nums"
                         x={viewBox.cx}
                         y={(viewBox.cy ?? 0) + 14}
                       >
-                        {formatCurrency(totalBalance, { currency, noDecimals: true })}
+                        {formatLakh(sanctioned)}
                       </tspan>
                     </text>
                   );
@@ -171,9 +118,7 @@ export function BalanceDistributionCard() {
                   <span aria-hidden="true" className="h-2 w-1 rounded-full" style={{ backgroundColor: item.fill }} />
                   <p className="truncate text-muted-foreground text-xs">{item.account}</p>
                 </div>
-                <p className="font-medium tabular-nums">
-                  {formatCurrency(item.amount, { currency, noDecimals: true })}
-                </p>
+                <p className="font-medium tabular-nums">{formatLakh(item.amount)}</p>
               </div>
               <div className="font-medium tabular-nums">{item.percentage}%</div>
             </div>

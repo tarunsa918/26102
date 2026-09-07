@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { format } from "date-fns";
-import { Download, RotateCw, Settings2 } from "lucide-react";
+import { Download, RotateCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "@/components/ui/toast";
+import { works } from "@/lib/mplads-mock";
 
 import { BalanceDistributionCard } from "./-components/balance-distribution-card";
 import { FinanceNotification } from "./-components/finance-notification";
@@ -19,14 +20,39 @@ export const Route = createFileRoute("/(main)/dashboard/finance")({
   component: Page,
 });
 
-function Page() {
-  const formattedDate = format(new Date(), "EEEE, do MMMM yyyy");
+function downloadFundCsv() {
+  const header = "work_id,title,state,district,status,sanctioned_lakh,spent_lakh,balance_lakh,due_date";
+  const lines = works.map((w) =>
+    [
+      w.id,
+      `"${w.title}"`,
+      w.state,
+      w.district,
+      w.status,
+      w.sanctionedLakh,
+      w.expenditureLakh,
+      (w.sanctionedLakh - w.expenditureLakh).toFixed(1),
+      w.dueDate,
+    ].join(","),
+  );
+  const blob = new Blob([[header, ...lines].join("\n")], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = "mplads-fund-flow-demo.csv";
+  anchor.click();
+  URL.revokeObjectURL(url);
+  toast.add({ title: "Export ready", description: "Demo fund-flow CSV downloaded (40 works)." });
+}
 
+function Page() {
   return (
     <div className="flex flex-col gap-4">
       <div className="space-y-1">
-        <h1 className="text-3xl tracking-tight">Personal Finances</h1>
-        <p className="text-muted-foreground text-sm">{formattedDate}</p>
+        <h1 className="text-3xl tracking-tight">Scheme fund flow</h1>
+        <p className="text-muted-foreground text-sm">
+          Where MPLADS money is released, spent and stuck · demo sample of 40 works.
+        </p>
       </div>
 
       <Tabs defaultValue="30-days" className="flex flex-col gap-4">
@@ -40,13 +66,9 @@ function Page() {
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
               <RotateCw className="size-4" />
-              <span>Updated 5 min ago</span>
+              <span>Demo data · 7 Sept 2026</span>
             </div>
-            <Button size="sm" variant="outline">
-              <Settings2 />
-              Settings
-            </Button>
-            <Button size="sm" variant="outline">
+            <Button size="sm" variant="outline" onClick={downloadFundCsv}>
               <Download data-icon="inline-start" />
               Export
             </Button>
