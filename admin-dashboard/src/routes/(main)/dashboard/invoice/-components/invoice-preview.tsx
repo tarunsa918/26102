@@ -1,11 +1,10 @@
 import * as React from "react";
 
-import { Download, Printer } from "lucide-react";
+import { Printer } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
 
-import { INVOICE_PAPER_HEIGHT, INVOICE_PAPER_SCALE, INVOICE_PAPER_WIDTH, type InvoiceFormValues } from "./data";
+import { INVOICE_PAPER_HEIGHT, INVOICE_PAPER_SCALE, INVOICE_PAPER_WIDTH, type UCFormValues } from "./data";
 import { InvoicePaper } from "./invoice-paper";
 import { PrintInvoice } from "./print-invoice";
 import { useVisibleCenterPosition } from "./use-visible-center-position";
@@ -14,7 +13,7 @@ function handlePrint() {
   window.print();
 }
 
-export function InvoicePreview({ invoice }: { invoice: InvoiceFormValues }) {
+export function InvoicePreview({ invoice }: { invoice: UCFormValues }) {
   const previewBodyRef = React.useRef<HTMLDivElement>(null);
   const paperLayout = useVisibleCenterPosition(previewBodyRef, {
     height: INVOICE_PAPER_HEIGHT,
@@ -28,16 +27,10 @@ export function InvoicePreview({ invoice }: { invoice: InvoiceFormValues }) {
       <div className="flex flex-col rounded-xl border bg-card">
         <div className="flex items-center justify-between px-4 py-4">
           <h2 className="font-medium text-lg">Preview</h2>
-          <ButtonGroup>
-            <Button type="button" variant="outline" onClick={handlePrint}>
-              <Printer data-icon="inline-start" />
-              Print
-            </Button>
-            <Button type="button" variant="outline">
-              <Download data-icon="inline-start" />
-              Download PDF
-            </Button>
-          </ButtonGroup>
+          <Button type="button" variant="outline" onClick={handlePrint}>
+            <Printer data-icon="inline-start" />
+            Print
+          </Button>
         </div>
 
         <div

@@ -10,10 +10,26 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { toast } from "@/components/ui/toast";
 
 import type { FileManagerFolder } from "./data";
 
-export function FoldersSection({ folders }: { folders: FileManagerFolder[] }) {
+export function FoldersSection({
+  folders,
+  onOpenFolder,
+}: {
+  folders: FileManagerFolder[];
+  onOpenFolder: (folder: FileManagerFolder) => void;
+}) {
+  async function handleCopyLink(folder: FileManagerFolder) {
+    try {
+      await navigator.clipboard.writeText(`Documents library — ${folder.name} (${folder.fileCount} files)`);
+      toast.add({ title: `Copied ${folder.name} reference` });
+    } catch {
+      toast.add({ title: "Copy failed", description: "Select the folder name manually." });
+    }
+  }
+
   return (
     <section className="flex flex-col gap-2" aria-labelledby="folders-heading">
       <div className="flex items-center justify-between">
@@ -45,9 +61,14 @@ export function FoldersSection({ folders }: { folders: FileManagerFolder[] }) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuGroup>
-                        <DropdownMenuItem>Open folder</DropdownMenuItem>
-                        <DropdownMenuItem>Copy share link</DropdownMenuItem>
-                        <DropdownMenuItem>Rename</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => onOpenFolder(folder)}>Open folder</DropdownMenuItem>
+                        <DropdownMenuItem
+                          onSelect={() => {
+                            void handleCopyLink(folder);
+                          }}
+                        >
+                          Copy share link
+                        </DropdownMenuItem>
                       </DropdownMenuGroup>
                     </DropdownMenuContent>
                   </DropdownMenu>

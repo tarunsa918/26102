@@ -1,7 +1,9 @@
+import { Link } from "@tanstack/react-router";
 import type { Column, ColumnDef } from "@tanstack/react-table";
 import { Subscribe } from "@tanstack/react-table";
 
 import { cn } from "cn";
+import { differenceInCalendarDays } from "date-fns";
 import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal, RotateCcw } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -11,18 +13,14 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { toast } from "@/components/ui/toast";
 import type { DataTableFeatures } from "@/lib/data-table-features";
+import { DEMO_TODAY_ISO, formatWorkDate } from "@/lib/mplads-mock";
 
-import { labels, priorities, statuses, type Task } from "./data";
+import { DOSSIER_ENTRY_SEARCH, labels, priorities, statuses, type Task } from "./data";
 
 const statusStyles: Record<string, string> = {
   backlog: "border-muted-foreground/20 bg-muted text-muted-foreground",
@@ -70,6 +68,31 @@ function TitleColumnHeader({ column }: { column: Column<DataTableFeatures, Task,
       </DropdownMenuContent>
     </DropdownMenu>
   );
+}
+
+function parseDay(yyyyMmDd: string): Date {
+  const [y, m, d] = yyyyMmDd.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function dueSubline(dueDate: string): string {
+  const diff = differenceInCalendarDays(parseDay(DEMO_TODAY_ISO), parseDay(dueDate));
+  if (diff > 0) {
+    return `overdue ${diff}d`;
+  }
+  if (diff === 0) {
+    return "due today";
+  }
+  return `in ${Math.abs(diff)}d`;
+}
+
+async function copyWorkId(id: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(id);
+    toast.add({ title: `Copied ${id}` });
+  } catch {
+    toast.add({ title: "Copy failed", description: "Select the ID manually." });
+  }
 }
 
 export const columns: ColumnDef<DataTableFeatures, Task>[] = [
@@ -123,7 +146,14 @@ export const columns: ColumnDef<DataTableFeatures, Task>[] = [
               {label.label}
             </Badge>
           )}
-          <span className="max-w-lg truncate font-medium text-sm">{row.getValue("title")}</span>
+          <Link
+            className="hover:underline"
+            to="/dashboard/works/$workId"
+            params={{ workId: row.original.id }}
+            search={{ ...DOSSIER_ENTRY_SEARCH }}
+          >
+            <span className="block max-w-lg truncate font-medium text-sm">{row.getValue("title")}</span>
+          </Link>
         </div>
       );
     },
@@ -171,10 +201,25 @@ export const columns: ColumnDef<DataTableFeatures, Task>[] = [
     },
   },
   {
+    accessorKey: "dueDate",
+    header: "Due",
+    cell: ({ row }) => {
+      const dueDate = row.getValue("dueDate") as string;
+      const overdue = dueDate < DEMO_TODAY_ISO;
+      return (
+        <div>
+          <div className="text-sm">{formatWorkDate(dueDate)}</div>
+          <div className={cn("text-xs", overdue ? "text-destructive" : "text-muted-foreground")}>
+            {dueSubline(dueDate)}
+          </div>
+        </div>
+      );
+    },
+    enableSorting: false,
+  },
+  {
     id: "actions",
     cell: ({ row }) => {
-      const task = row.original as Task;
-
       return (
         <div className="text-right">
           <DropdownMenu>
@@ -187,26 +232,23 @@ export const columns: ColumnDef<DataTableFeatures, Task>[] = [
               <span className="sr-only">Open menu</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem>Edit</DropdownMenuItem>
-              <DropdownMenuItem>Make a copy</DropdownMenuItem>
-              <DropdownMenuItem>Favorite</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>Labels</DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  <DropdownMenuRadioGroup value={task.label}>
-                    {labels.map((label) => (
-                      <DropdownMenuRadioItem key={label.value} value={label.value}>
-                        {label.label}
-                      </DropdownMenuRadioItem>
-                    ))}
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                Delete
-                <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
+              <DropdownMenuItem
+                render={
+                  <Link
+                    to="/dashboard/works/$workId"
+                    params={{ workId: row.original.id }}
+                    search={{ ...DOSSIER_ENTRY_SEARCH }}
+                  />
+                }
+              >
+                Open dossier
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => {
+                  void copyWorkId(row.original.id);
+                }}
+              >
+                Copy ID
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

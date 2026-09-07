@@ -34,7 +34,7 @@ export function TasksToolbar<TData extends RowData>({ table }: TasksToolbarProps
     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex flex-1 flex-wrap items-center gap-2">
         <Input
-          placeholder="Filter tasks..."
+          placeholder="Filter verification queue..."
           value={searchValue}
           onChange={(event) => {
             table.getColumn("title")?.setFilterValue(event.target.value);

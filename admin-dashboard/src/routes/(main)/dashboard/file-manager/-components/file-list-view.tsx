@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import { cn } from "cn";
 import { Star } from "lucide-react";
 
@@ -11,11 +9,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { type FileManagerFile, fileIcons } from "./data";
 import { FileActions } from "./file-actions";
 
-export function FileListView({ files }: { files: FileManagerFile[] }) {
-  const [listFiles, setListFiles] = useState(files);
-  const toggleStar = (fileId: string) =>
-    setListFiles((current) => current.map((file) => (file.id === fileId ? { ...file, starred: !file.starred } : file)));
+interface FileListViewProps {
+  files: FileManagerFile[];
+  starred: ReadonlySet<string>;
+  onToggleStar: (fileId: string) => void;
+  onRemove: (fileId: string) => void;
+}
 
+export function FileListView({ files, starred, onToggleStar, onRemove }: FileListViewProps) {
   return (
     <Table>
       <TableHeader>
@@ -30,16 +31,23 @@ export function FileListView({ files }: { files: FileManagerFile[] }) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {listFiles.map((file) => {
+        {files.map((file) => {
           const FileIcon = fileIcons[file.kind];
+          const isStarred = starred.has(file.id) || file.starred;
+          const starredFile = { ...file, starred: isStarred };
           return (
             <TableRow key={file.id}>
               <TableCell className="pl-0">
                 <div className="flex min-w-0 items-center gap-3">
                   <FileIcon className="size-5 shrink-0 text-muted-foreground" />
-                  <Button variant="link" size="sm" className="h-auto max-w-72 justify-start px-0">
-                    <span className="truncate">{file.name}</span>
-                  </Button>
+                  <div className="min-w-0">
+                    <Button variant="link" size="sm" className="h-auto max-w-72 justify-start px-0">
+                      <span className="truncate">{file.name}</span>
+                    </Button>
+                    <div className="truncate text-muted-foreground text-xs">
+                      {file.workId} · {file.workTitle}
+                    </div>
+                  </div>
                   {file.shared && (
                     <Badge variant="outline" className="hidden xl:inline-flex">
                       Shared
@@ -62,12 +70,16 @@ export function FileListView({ files }: { files: FileManagerFile[] }) {
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    aria-label={file.starred ? `Unstar ${file.name}` : `Star ${file.name}`}
-                    onClick={() => toggleStar(file.id)}
+                    aria-label={isStarred ? `Unstar ${file.name}` : `Star ${file.name}`}
+                    onClick={() => onToggleStar(file.id)}
                   >
-                    <Star className={cn(file.starred && "fill-current")} />
+                    <Star className={cn(isStarred && "fill-current")} />
                   </Button>
-                  <FileActions file={file} onToggleStar={() => toggleStar(file.id)} />
+                  <FileActions
+                    file={starredFile}
+                    onToggleStar={() => onToggleStar(file.id)}
+                    onRemove={() => onRemove(file.id)}
+                  />
                 </div>
               </TableCell>
             </TableRow>

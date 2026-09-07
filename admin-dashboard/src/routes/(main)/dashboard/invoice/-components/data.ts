@@ -1,147 +1,113 @@
-import { addDays, format } from "date-fns";
+import { anomalies, FLAGSHIP_WORK_ID, works } from "@/lib/mplads-mock";
+import type { Work } from "@/lib/mplads-schema";
 
-export interface InvoiceLineItem {
+export interface UCTranche {
   id: string;
   description: string;
   quantity: number;
   unitPrice: number;
 }
 
-export interface InvoiceTaxOption {
-  id: string;
-  name: string;
-  rate: number;
-}
-
-export type InvoiceDiscountType = "fixed" | "percent";
+export type UCStatus = "pending" | "received";
 
 export const INVOICE_PAPER_WIDTH = 816;
 export const INVOICE_PAPER_HEIGHT = 1056;
 export const INVOICE_PAPER_SCALE = 0.6;
 
-export interface InvoiceFromDetails {
-  name: string;
-  email: string;
-  phone: string;
-  website: string;
-  addressLines: string[];
-  taxId: string;
-  paymentAccountName: string;
-  routingNumber: string;
-  issuerName: string;
-}
-
-export interface InvoiceToDetails {
+export interface UCWorkOption {
   id: string;
-  name: string;
-  email: string;
-  addressLines: string[];
-  taxId: string;
+  title: string;
+  district: string;
+  state: string;
+  agency: string;
+  sanctionedLakh: number;
+  expenditureLakh: number;
+  sanctionDate: string;
+  dueDate: string;
+  status: Work["status"];
+  ucStatus: UCStatus;
 }
 
-export interface InvoiceFormValues {
+export interface UCFormValues {
+  workId: string;
   referenceNumber: string;
   issuedDate: string;
   paymentDueDate: string;
-  from: InvoiceFromDetails;
-  to: InvoiceToDetails;
-  taxId: string;
-  discountType: InvoiceDiscountType;
-  discountValue: number;
-  items: InvoiceLineItem[];
+  status: UCStatus;
+  items: UCTranche[];
 }
 
-const today = new Date();
+const utilisationWorkIds = new Set(
+  anomalies.filter((anomaly) => anomaly.kind === "utilisation").map((anomaly) => anomaly.workId),
+);
 
-export const defaultInvoiceValues: InvoiceFormValues = {
-  referenceNumber: "FL-0425",
-  issuedDate: format(today, "yyyy-MM-dd"),
-  paymentDueDate: format(addDays(today, 14), "yyyy-MM-dd"),
-  from: {
-    name: "Example Corp",
-    email: "billing@example.com",
-    phone: "+1-512-555-0184",
-    website: "example.com",
-    addressLines: ["214 Pixel Avenue", "Austin, TX 78701"],
-    taxId: "WS-1029384756",
-    paymentAccountName: "Mercury Business",
-    routingNumber: "084009519",
-    issuerName: "Alex Carter",
-  },
-  to: {
-    id: "aiy-cap",
-    name: "AIY Cap",
-    email: "finance@aiycap.com",
-    addressLines: ["One BKC, Bandra Kurla Complex", "Mumbai, Maharashtra 400051"],
-    taxId: "GSTIN-27AAICA9102K1Z7",
-  },
-  taxId: "vat",
-  discountType: "fixed",
-  discountValue: 40,
-  items: [
+function ucStatusFor(workId: string): UCStatus {
+  return utilisationWorkIds.has(workId) ? "pending" : "received";
+}
+
+export const ucWorks: UCWorkOption[] = works
+  .map((work) => ({
+    id: work.id,
+    title: work.title,
+    district: work.district,
+    state: work.state,
+    agency: work.agency,
+    sanctionedLakh: work.sanctionedLakh,
+    expenditureLakh: work.expenditureLakh,
+    sanctionDate: work.sanctionDate,
+    dueDate: work.dueDate,
+    status: work.status,
+    ucStatus: ucStatusFor(work.id),
+  }))
+  .sort((a, b) => {
+    if (a.ucStatus !== b.ucStatus) {
+      return a.ucStatus === "pending" ? -1 : 1;
+    }
+    return a.id.localeCompare(b.id);
+  });
+
+function tranchesFor(work: UCWorkOption): UCTranche[] {
+  const released = Math.round(work.expenditureLakh * 100000);
+  const balance = Math.round(Math.max(work.sanctionedLakh - work.expenditureLakh, 0) * 100000);
+  return [
     {
-      id: "hosting",
-      description: "Cloud hosting services",
+      id: `${work.id}-released`,
+      description: "Funds released to agency",
       quantity: 1,
-      unitPrice: 3500,
+      unitPrice: released,
     },
     {
-      id: "analytics",
-      description: "Data analytics report",
-      quantity: 2,
-      unitPrice: 750,
-    },
-    {
-      id: "support",
-      description: "Technical support retainer",
+      id: `${work.id}-balance`,
+      description: "Balance sanctioned (unreleased)",
       quantity: 1,
-      unitPrice: 400,
+      unitPrice: balance,
     },
-  ],
-};
+  ];
+}
 
-export const invoiceTaxOptions: InvoiceTaxOption[] = [
-  {
-    id: "gst",
-    name: "GST",
-    rate: 18,
-  },
-  {
-    id: "vat",
-    name: "VAT",
-    rate: 12,
-  },
-  {
-    id: "service-tax",
-    name: "Service Tax",
-    rate: 10,
-  },
-  {
-    id: "none",
-    name: "No Tax",
-    rate: 0,
-  },
-];
+export function valuesForWork(workId: string): UCFormValues {
+  const work = ucWorks.find((option) => option.id === workId) ?? ucWorks[0];
+  return {
+    workId: work.id,
+    referenceNumber: `UC-${work.id}`,
+    issuedDate: work.sanctionDate,
+    paymentDueDate: work.dueDate,
+    status: work.ucStatus,
+    items: tranchesFor(work),
+  };
+}
 
-export const invoiceClients: InvoiceToDetails[] = [
-  {
-    id: "bright-enterprises",
-    name: "Bright Enterprises",
-    email: "billing@brightenterprises.com",
-    addressLines: ["450 Park Avenue South", "New York, NY 10016", "United States"],
-    taxId: "US-EIN-84-2938475",
-  },
-  defaultInvoiceValues.to,
-  {
-    id: "northline-gmbh",
-    name: "Northline GmbH",
-    email: "ap@northline.de",
-    addressLines: ["Kastanienallee 32", "10435 Berlin", "Germany"],
-    taxId: "DE-VAT-219384756",
-  },
-];
+function defaultWork(): UCWorkOption {
+  return (
+    ucWorks.find((work) => work.ucStatus === "pending") ??
+    ucWorks.find((work) => work.id === FLAGSHIP_WORK_ID) ??
+    ucWorks[0]
+  );
+}
 
-export function getLineAmount(item?: InvoiceLineItem) {
+export const defaultUCValues: UCFormValues = valuesForWork(defaultWork().id);
+
+export function getLineAmount(item?: UCTranche) {
   if (!item) return 0;
 
   const quantity = Number.isFinite(item.quantity) ? item.quantity : 0;
@@ -150,32 +116,14 @@ export function getLineAmount(item?: InvoiceLineItem) {
   return quantity * unitPrice;
 }
 
-export function getInvoiceItems(invoice: InvoiceFormValues) {
-  return invoice.items;
+export function getUCTranches(uc: UCFormValues) {
+  return uc.items;
 }
 
-export function getInvoiceSubtotal(invoice: InvoiceFormValues) {
-  return getInvoiceItems(invoice).reduce((subtotal, item) => subtotal + getLineAmount(item), 0);
+export function getUCSubtotal(uc: UCFormValues) {
+  return getUCTranches(uc).reduce((subtotal, item) => subtotal + getLineAmount(item), 0);
 }
 
-export function getInvoiceTaxOption(invoice: InvoiceFormValues) {
-  return invoiceTaxOptions.find((taxOption) => taxOption.id === invoice.taxId) ?? invoiceTaxOptions[0];
-}
-
-export function getInvoiceTax(invoice: InvoiceFormValues) {
-  const taxRate = getInvoiceTaxOption(invoice).rate;
-
-  return Math.max(getInvoiceSubtotal(invoice) - getInvoiceDiscount(invoice), 0) * (taxRate / 100);
-}
-
-export function getInvoiceDiscount(invoice: InvoiceFormValues) {
-  const subtotal = getInvoiceSubtotal(invoice);
-  const discountValue = Number.isFinite(invoice.discountValue) ? invoice.discountValue : 0;
-  const discount = invoice.discountType === "percent" ? subtotal * (discountValue / 100) : discountValue;
-
-  return Math.min(Math.max(discount, 0), subtotal);
-}
-
-export function getInvoiceTotal(invoice: InvoiceFormValues) {
-  return Math.max(getInvoiceSubtotal(invoice) - getInvoiceDiscount(invoice), 0) + getInvoiceTax(invoice);
+export function getUCTotal(uc: UCFormValues) {
+  return getUCSubtotal(uc);
 }

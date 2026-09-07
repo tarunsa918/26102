@@ -1,21 +1,23 @@
-import { File, FileArchive, FileChartColumn, FileImage, FileText } from "lucide-react";
+import { File, FileImage, FileText } from "lucide-react";
 
-export type FileKind = "document" | "spreadsheet" | "design" | "pdf" | "archive";
+import { evidences, formatWorkDate, works } from "@/lib/mplads-mock";
+
+export type FileKind = "doc" | "photo" | "report";
 export type FileManagerView = "grid" | "list";
 export const fileIcons = {
-  archive: FileArchive,
-  design: FileImage,
-  document: FileText,
-  pdf: File,
-  spreadsheet: FileChartColumn,
+  doc: FileText,
+  photo: FileImage,
+  report: File,
 } satisfies Record<FileKind, typeof File>;
 export const fileKindLabels: Record<FileKind, string> = {
-  archive: "Archive",
-  design: "Design",
-  document: "Document",
-  pdf: "PDF",
-  spreadsheet: "Spreadsheet",
+  doc: "Document",
+  photo: "Photo",
+  report: "Report",
 };
+
+export type LibraryShow = "all" | "starred" | "shared";
+export type LibraryKind = "all" | FileKind;
+export type LibrarySort = "modified" | "name" | "size";
 
 export interface FileManagerFolder {
   id: string;
@@ -29,142 +31,87 @@ export interface FileManagerFile {
   name: string;
   kind: FileKind;
   size: string;
+  sizeKb: number;
   owner: string;
   ownerInitials: string;
   modifiedAt: string;
+  uploadedAt: string;
   shared: boolean;
   starred: boolean;
+  workId: string;
+  workTitle: string;
+  district: string;
 }
 
-export const folders: FileManagerFolder[] = [
-  { id: "brand-assets", name: "Brand assets", fileCount: 24, size: "1.8 GB", updatedAt: "12 min ago" },
-  { id: "product-design", name: "Product design", fileCount: 38, size: "4.6 GB", updatedAt: "Yesterday" },
-  { id: "legal-documents", name: "Legal documents", fileCount: 16, size: "840 MB", updatedAt: "Jul 29" },
-  { id: "research", name: "Research", fileCount: 11, size: "620 MB", updatedAt: "Jul 27" },
-  { id: "marketing", name: "Marketing", fileCount: 29, size: "2.3 GB", updatedAt: "Jul 25" },
-  { id: "team-resources", name: "Team resources", fileCount: 18, size: "1.2 GB", updatedAt: "Jul 22" },
-];
+function formatSize(sizeKb: number): string {
+  if (sizeKb >= 1024) {
+    return `${(sizeKb / 1024).toFixed(1)} MB`;
+  }
+  return `${Math.round(sizeKb)} KB`;
+}
 
-export const files: FileManagerFile[] = [
-  {
-    id: "product-roadmap",
-    name: "Product roadmap 2027.pdf",
-    kind: "pdf",
-    size: "8.4 MB",
-    owner: "Alex Carter",
-    ownerInitials: "AC",
-    modifiedAt: "5 minutes ago",
-    shared: true,
-    starred: true,
-  },
-  {
-    id: "design-system",
-    name: "Design system foundations.fig",
-    kind: "design",
-    size: "24.1 MB",
-    owner: "Aiy",
-    ownerInitials: "AY",
-    modifiedAt: "2 hours ago",
-    shared: true,
-    starred: false,
-  },
-  {
-    id: "campaign-performance",
-    name: "Campaign performance.xlsx",
-    kind: "spreadsheet",
-    size: "2.7 MB",
-    owner: "Jordan Lee",
-    ownerInitials: "JL",
-    modifiedAt: "Yesterday",
+function initialsOf(name: string): string {
+  return name
+    .split(" ")
+    .map((part) => part.charAt(0))
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+function slugOf(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+}
+
+function workOf(workId: string) {
+  return works.find((work) => work.id === workId);
+}
+
+export const files: FileManagerFile[] = evidences.map((evidence) => {
+  const work = workOf(evidence.workId);
+  return {
+    id: evidence.id,
+    name: evidence.name,
+    kind: evidence.kind,
+    size: formatSize(evidence.sizeKb),
+    sizeKb: evidence.sizeKb,
+    owner: evidence.by,
+    ownerInitials: initialsOf(evidence.by),
+    modifiedAt: formatWorkDate(evidence.uploadedAt.slice(0, 10)),
+    uploadedAt: evidence.uploadedAt,
     shared: false,
     starred: false,
-  },
-  {
-    id: "research-notes",
-    name: "Customer research notes.docx",
-    kind: "document",
-    size: "1.2 MB",
-    owner: "Aiy",
-    ownerInitials: "AY",
-    modifiedAt: "Jul 29, 2026",
-    shared: true,
-    starred: true,
-  },
-  {
-    id: "release-assets",
-    name: "Release assets.zip",
-    kind: "archive",
-    size: "186 MB",
-    owner: "Alex Carter",
-    ownerInitials: "AC",
-    modifiedAt: "Jul 28, 2026",
-    shared: false,
-    starred: false,
-  },
-  {
-    id: "handoff-checklist",
-    name: "Handoff checklist.pdf",
-    kind: "pdf",
-    size: "940 KB",
-    owner: "Jordan Lee",
-    ownerInitials: "JL",
-    modifiedAt: "Jul 26, 2026",
-    shared: true,
-    starred: false,
-  },
-  {
-    id: "quarterly-budget",
-    name: "Quarterly budget forecast.xlsx",
-    kind: "spreadsheet",
-    size: "3.8 MB",
-    owner: "Alex Carter",
-    ownerInitials: "AC",
-    modifiedAt: "Jul 24, 2026",
-    shared: true,
-    starred: false,
-  },
-  {
-    id: "mobile-app-prototype",
-    name: "Mobile app prototype.fig",
-    kind: "design",
-    size: "18.6 MB",
-    owner: "Jordan Lee",
-    ownerInitials: "JL",
-    modifiedAt: "Jul 23, 2026",
-    shared: true,
-    starred: true,
-  },
-  {
-    id: "partnership-agreement",
-    name: "Partnership agreement.docx",
-    kind: "document",
-    size: "620 KB",
-    owner: "Jordan Lee",
-    ownerInitials: "JL",
-    modifiedAt: "Jul 21, 2026",
-    shared: false,
-    starred: false,
-  },
-  {
-    id: "product-launch-brief",
-    name: "Product launch brief.pdf",
-    kind: "pdf",
-    size: "4.2 MB",
-    owner: "Alex Carter",
-    ownerInitials: "AC",
-    modifiedAt: "Jul 19, 2026",
-    shared: true,
-    starred: false,
-  },
-  {
-    id: "brand-exports",
-    name: "Brand exports.zip",
-    kind: "archive",
-    size: "72 MB",
-    owner: "Alex Carter",
-    ownerInitials: "AC",
-    modifiedAt: "Jul 17, 2026",
-    shared: false,
-    starred: false,
-  },
-];
+    workId: evidence.workId,
+    workTitle: work ? work.title : evidence.workId,
+    district: work ? work.district : "",
+  };
+});
+
+interface FolderAccumulator {
+  fileCount: number;
+  sizeKb: number;
+  latestAt: string;
+}
+
+export const folders: FileManagerFolder[] = (() => {
+  const byDistrict = new Map<string, FolderAccumulator>();
+  for (const file of files) {
+    const current = byDistrict.get(file.district) ?? { fileCount: 0, sizeKb: 0, latestAt: file.uploadedAt };
+    current.fileCount += 1;
+    current.sizeKb += file.sizeKb;
+    if (file.uploadedAt > current.latestAt) {
+      current.latestAt = file.uploadedAt;
+    }
+    byDistrict.set(file.district, current);
+  }
+  return [...byDistrict.entries()]
+    .map(([district, acc]) => ({
+      id: slugOf(district || "unassigned"),
+      name: district || "Unassigned",
+      fileCount: acc.fileCount,
+      size: formatSize(acc.sizeKb),
+      updatedAt: formatWorkDate(acc.latestAt.slice(0, 10)),
+    }))
+    .sort((a, b) => b.fileCount - a.fileCount || a.name.localeCompare(b.name));
+})();

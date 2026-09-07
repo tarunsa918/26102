@@ -2,10 +2,10 @@ import * as React from "react";
 
 import { createPortal } from "react-dom";
 
-import type { InvoiceFormValues } from "./data";
+import type { UCFormValues } from "./data";
 import { InvoicePaper } from "./invoice-paper";
 
-export function PrintInvoice({ invoice }: { invoice: InvoiceFormValues }) {
+export function PrintInvoice({ invoice }: { invoice: UCFormValues }) {
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {

@@ -16,11 +16,38 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 
-export function FileManagerToolbar() {
+import type { LibraryKind, LibraryShow, LibrarySort } from "./data";
+
+interface FileManagerToolbarProps {
+  query: string;
+  onQueryChange: (value: string) => void;
+  show: LibraryShow;
+  onShowChange: (value: LibraryShow) => void;
+  kind: LibraryKind;
+  onKindChange: (value: LibraryKind) => void;
+  sort: LibrarySort;
+  onSortChange: (value: LibrarySort) => void;
+}
+
+export function FileManagerToolbar({
+  query,
+  onQueryChange,
+  show,
+  onShowChange,
+  kind,
+  onKindChange,
+  sort,
+  onSortChange,
+}: FileManagerToolbarProps) {
   return (
     <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
       <InputGroup className="md:max-w-lg">
-        <InputGroupInput placeholder="Search files and folders..." aria-label="Search files and folders" />
+        <InputGroupInput
+          placeholder="Search files and folders..."
+          aria-label="Search files and folders"
+          value={query}
+          onChange={(event) => onQueryChange(event.target.value)}
+        />
         <InputGroupAddon>
           <Search />
         </InputGroupAddon>
@@ -34,7 +61,7 @@ export function FileManagerToolbar() {
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuGroup>
               <DropdownMenuLabel>Show</DropdownMenuLabel>
-              <DropdownMenuRadioGroup value="all">
+              <DropdownMenuRadioGroup value={show} onValueChange={(value) => onShowChange(value as LibraryShow)}>
                 <DropdownMenuRadioItem value="all">All files</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="starred">Starred</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="shared">Shared</DropdownMenuRadioItem>
@@ -49,13 +76,11 @@ export function FileManagerToolbar() {
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent sideOffset={8}>
                   <DropdownMenuGroup>
-                    <DropdownMenuRadioGroup value="all">
+                    <DropdownMenuRadioGroup value={kind} onValueChange={(value) => onKindChange(value as LibraryKind)}>
                       <DropdownMenuRadioItem value="all">All types</DropdownMenuRadioItem>
-                      <DropdownMenuRadioItem value="archive">Archive</DropdownMenuRadioItem>
-                      <DropdownMenuRadioItem value="design">Design</DropdownMenuRadioItem>
-                      <DropdownMenuRadioItem value="document">Document</DropdownMenuRadioItem>
-                      <DropdownMenuRadioItem value="pdf">PDF</DropdownMenuRadioItem>
-                      <DropdownMenuRadioItem value="spreadsheet">Spreadsheet</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="doc">Document</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="photo">Photo</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="report">Report</DropdownMenuRadioItem>
                     </DropdownMenuRadioGroup>
                   </DropdownMenuGroup>
                 </DropdownMenuSubContent>
@@ -67,7 +92,7 @@ export function FileManagerToolbar() {
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent sideOffset={8}>
                   <DropdownMenuGroup>
-                    <DropdownMenuRadioGroup value="modified">
+                    <DropdownMenuRadioGroup value={sort} onValueChange={(value) => onSortChange(value as LibrarySort)}>
                       <DropdownMenuRadioItem value="modified">Last modified</DropdownMenuRadioItem>
                       <DropdownMenuRadioItem value="name">Name</DropdownMenuRadioItem>
                       <DropdownMenuRadioItem value="size">File size</DropdownMenuRadioItem>
