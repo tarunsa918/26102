@@ -1,143 +1,155 @@
-# Flow — Function Call Map & User Flows
+# Flow — MPLADS Sentinel (SIH26102)
 
-> **Purpose**: The "how it works" file. It maps which functions call what, the user
-> journeys, request/response sequences, and routes. Reading this file gives you an
-> instant mental model of the project structure.
->
-> **Update rule (MANDATORY)**: Update this file whenever you add, rename, or remove any
-> function, component, hook, route, API endpoint, or user flow. Never let it go stale —
-> agents and humans navigate the codebase through this file.
-
----
+> HOW the app works. Update when functions, components, routes, APIs, or flows change. Stale diagrams are bugs.
 
 ## Overview
 
-[2–3 sentences: what the app does, the main loop, the key actors.]
+An officer opens **Overview**, sees what needs attention, drills into the **Works** queue, opens a **Work dossier** (financials, progress, explained anomalies, evidence), asks the **AI copilot**, and records a **decision** (Verified / Dismissed / Action Required). Prototype runs on bundled mock data shaped like future server responses; backend/ML slots in behind identical signatures.
 
----
-
-## Architecture Diagram
+## Architecture diagram
 
 ```mermaid
 graph TD
-    subgraph Client
-        U[User Browser]
+    subgraph Client [TanStack Start SSR]
+        Shell[dashboard/route.tsx<br/>sidebar + header + Outlet]
+        O[/overview/]
+        W[/works/]
+        D[/works/:workId dossier/]
+        AI[/ai copilot/]
+        Shell --> O & W & D & AI
     end
-    subgraph Next.js App
-        P[app/ pages] --> F[features/]
-        F --> S[shared/]
-        F --> E[entities/]
-        E --> S
+    subgraph Server [createServerFn in src/server/]
+        API[mplads fns:<br/>works / anomalies / evidence / decisions / ai.chat]
     end
-    subgraph Data Layer
-        API[Backend API / Server Actions]
-        DB[(Database)]
+    subgraph Data
+        Mock[-components/data.ts<br/>prototype]
+        DB[(DB TBD<br/>+ anomaly engine)]
     end
-    U --> P
-    E --> API
-    API --> DB
+    O & W & D & AI --> API
+    API --> Mock
+    Mock -.->|same shapes| DB
 ```
 
----
+## User flows
 
-## User Flows
-
-> Each flow = one user journey. Format: goal → steps → outcome.
-
-### Flow: [User flow name]
-**Goal**: [what the user wants]
-**Steps**: [brief description]
+### Flow: Morning triage
+**Goal**: know what needs attention today. **Steps**: Overview KPIs + risk map → high-priority queue → click top case → dossier.
 
 ```mermaid
 flowchart LR
-    A([User lands on /]) --> B[Browses X]
-    B --> C{Has account?}
-    C -- no --> D[Sign up]
-    C -- yes --> E[Login]
-    D --> F[Reaches dashboard]
-    E --> F
+    A([Officer opens /overview]) --> B[Scans KPIs + risk map]
+    B --> C[Opens priority queue]
+    C --> D[Clicks case → /works/:workId]
 ```
 
----
+### Flow: Investigation → decision
+**Goal**: verify a flag and record the outcome. **Steps**: dossier tabs (financials/progress/anomalies/evidence) → AI question → set status + note → activity log entry.
 
-## Request / Response Flows
+```mermaid
+flowchart LR
+    A([Dossier]) --> B[Reads explained anomaly]
+    B --> C[Checks evidence]
+    C --> D[Asks AI copilot]
+    D --> E{Decision}
+    E --> F[Verified / Dismissed / Action Required]
+    F --> G[Activity log]
+```
 
-> One sequence diagram per key request. Use the Client → Route → Service → Repository →
-> Database chain that matches the actual code.
+### Flow: Evidence upload
+**Goal**: attach supporting records to a work. **Steps**: dossier Evidence tab → upload (validated form) → file appears in grid/list → linked to anomaly context.
 
-### [Flow name]
+## Request / response flows
+
+### Prototype (current): dossier load
 ```mermaid
 sequenceDiagram
-    participant U as User
-    participant C as Client (browser)
-    participant A as API Route
-    participant S as Service
-    participant R as Repository
+    participant U as Officer
+    participant R as works/:workId route
+    participant C as -components (data.ts mock)
+    U->>R: opens work
+    R->>C: import mock Work + Anomaly[] + Evidence[]
+    C-->>R: typed data (Zod shapes)
+    R-->>U: rendered dossier
+```
+
+### Target (backend built): anomaly-flagged works
+```mermaid
+sequenceDiagram
+    participant U as Officer
+    participant R as Route loader
+    participant S as createServerFn anomalies.list
+    participant E as Anomaly engine
     participant D as Database
-
-    U->>C: submits form
-    C->>A: POST /api/x
-    A->>S: validate + call service
-    S->>R: query
-    R->>D: SQL
-    D-->>R: rows
-    R-->>S: data
-    S-->>A: result
-    A-->>C: JSON response
-    C-->>U: render result
+    U->>R: opens /works?filter=high-risk
+    R->>S: validated query (Zod)
+    S->>E: score works vs peer groups
+    E->>D: read sanctions/expenditure/progress
+    D-->>E: rows
+    E-->>S: flags + peer stats + reasons
+    S-->>R: Anomaly[]
+    R-->>U: queue with explanations
 ```
 
----
+## Function call map
 
-## Function Call Map
-
-> Which function calls what, per feature. Keep this accurate — agents use it to navigate
-> the code and find where changes are needed.
-
-### Feature: [feature name]
+### Dossier (to build)
 ```
-app/page.tsx (route composition)
-  └─ <FeatureComponent />        (features/<feature>/components/)
-       └─ use<Feature>Hook()     (features/<feature>/hooks/)
-            └─ <feature>Service() (features/<feature>/service/)
-                 └─ apiClient.get("/api/...")
+/works/:workId (route.tsx, composes)
+  ├─ <WorkSummary/>            (header: IDs, status badge, amounts)
+  ├─ <FinancialsCard/>         (finance/ donor: KPI cards + recharts line)
+  ├─ <ProgressCard/>           (meters + timeline)
+  ├─ <AnomalyExplainer/>       (NEW: peer N, median vs actual, corroborating signal)
+  ├─ <EvidenceGrid/>           (file-manager/ donor: grid/list + upload dialog)
+  ├─ <ActivityTimeline/>       (invoice-style list)
+  ├─ <DecisionBar/>            (Verified/Dismissed/Action Required + notes form)
+  └─ <ContextualAI/>           (chat/ donor: bubble thread + tool cards)
 ```
 
-### Feature: [feature name]
-- `[Function A]` calls `[Function B]` to [why]
-- `[Function B]` calls `[Repository X]` to [why]
+### Overview (to build)
+```
+/overview (route.tsx, composes)
+  ├─ <KpiStrip/>               (default/ donor: metric-cards)
+  ├─ <IndiaRiskMap/>           (logistics/shipment-route-map donor + India TopoJSON TO ADD)
+  └─ <PriorityQueue/>          (tasks/crm table donor: columns/schema/table, top-N)
+```
 
----
+### Works (to build)
+```
+/works (route.tsx, composes)
+  └─ <WorksTable/>             (crm opportunities-table donor + tasks toolbar/filters)
+       └─ row click → /works/:workId
+```
 
-## Route Map
+## Route map
 
-| Route | Page / Handler | Purpose | Auth Required |
-|-------|----------------|---------|---------------|
-| `/` | `app/page.tsx` | Landing page | No |
-| `/login` | `app/(auth)/login/page.tsx` | Sign in | No |
+| Route | Source | Purpose |
+|-------|--------|---------|
+| `/auth/v1|v2/login|register` | template (reuse) | Officer sign-in |
+| `/dashboard/default` etc. | template (donor only) | Reference screens — NOT in MVP nav |
+| `/overview` | **to build** | KPIs + map + priority queue |
+| `/works` | **to build** | Search/filter/sort works |
+| `/works/:workId` | **to build** (`$param.tsx` pattern) | Dossier |
+| `/ai` | **to build** on `(main)/chat/` | Global copilot |
+| Sidebar nav | `navigation/sidebar/sidebar-items.ts` | Replace groups with MVP nav (Overview/Works/AI + dossier via click) |
 
----
+## API endpoints (server functions)
 
-## API Endpoints
+| Function | Input (Zod) | Output | Today |
+|----------|-------------|--------|-------|
+| `works.list` | filters/search/sort/page | Work[] + total | mock `data.ts` |
+| `works.get` | workId | Work detail | mock |
+| `anomalies.list` | workId \| filters | Anomaly[] (+peer stats) | precomputed mock flags |
+| `evidence.list/upload` | workId / file+meta | Evidence[] | local records |
+| `decisions.record` | workId, status, note | Activity entry | in-memory |
+| `ai.chat` | message + page context | answer + tool calls | to design (tool layer: getWork, comparePeers, explainFlag, searchWorks) |
 
-| Method | Path | Handler | Purpose |
-|--------|------|---------|---------|
-| POST | `/api/auth/login` | `authService.login` | Sign in and issue session |
+## State flow
 
----
+1. Route loaders/server fns return Zod-typed data (mock today, DB later — same shapes).
+2. Dossier/AI conversation state: local component state first; promote to zustand store only when cross-route need is proven.
+3. Preferences (theme/layout) persist via existing cookie-backed server fns — untouched.
 
-## State Flow
-
-> How state moves through the app (server → client → store). Describe the data flow,
-> not just the components.
-
-1. Server component fetches data in `app/` and passes props down
-2. Client components call `<feature>Controller` for mutations
-3. `queryClient` caches/invalidates on mutations
-
----
-
-## Update Protocol (MANDATORY)
+## Update protocol (MANDATORY)
 
 Update this file when any of the following change:
 
@@ -147,5 +159,3 @@ Update this file when any of the following change:
 - [ ] New or removed API endpoint
 - [ ] New dependency in a call chain (library, service)
 - [ ] State management approach changed
-
-When you update, keep the diagrams in sync with the code — a stale diagram is worse than no diagram.

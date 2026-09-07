@@ -4,17 +4,22 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-**Phase 0 — Project Foundation**
+**Phase 1 — SIH26102 MVP (MPLADS Sentinel)**
 
-Template hardening: making the execution protocol enforceable so AI agents actually follow it.
+MPLADS anomaly-detection workspace for SIH 2026 (MoSPI). Frontend shell runs; prototype UI-first on mock data; backend/ML behind identical interfaces next.
 
 ## Current Goal
 
-Fix the template so agents comply with the workflow: auto-loaded entry point, hard gates,
-unambiguous rules, and instant project understanding via the three living context files.
+Scaffold the 5 MVP routes (`/login`, `/overview`, `/works`, `/works/:workId`, `/ai`) in `admin-dashboard/` by cloning donor screens, with `src/lib/mplads-schema.ts` Zod contract + bundled mock data — judge-demoable end to end.
 
 ## Completed
 
+- **Commit `17485d2` on `20260906-171235-project-setup` (2026-09-06)** — `chore: project setup with skills, spec-kit, and dashboard` (508 files). Verified pre-commit sweep: zero old-repo/author mentions; `node_modules`/`dist`/`build` excluded via `.gitignore`. Not pushed.
+- **Context sync for SIH MVP (2026-09-06)** — rewrote all 8 context files for SIH26102: project thesis + 5-route scope, real TanStack architecture, full design-system bible (tokens, 61 primitives, layout idioms, anti-slop rules), colocation code standards, flow maps, ADR-006. Template mapped: donors per route, India TopoJSON identified as the one missing asset.
+- **Feature specs + clarifications (2026-09-06)** — `Feature_docs/00–05` written (contract, login, overview, works, dossier, copilot) with min components mapped to donors + dummy-data shapes. Decided: scripted copilot brain, state-level map, localStorage persistence, open entry with header role switch. **AWAITING user approval to implement (design gate).**
+- **Specs deep-detailed (2026-09-06)** — all 6 `Feature_docs` rewritten as build blueprints: exact ASCII layouts with grid spans, per-card anatomy, metric tables with values/badges/formats, component file references, chart configs, behaviors, states, acceptance tests. Zero new primitives/components specified — arrangement only.
+- **Design-system deep catalog (2026-09-06)** — 8 parallel research agents mapped every screen file-by-file; `context/design-system.md` expanded to 41KB/11 sections: deep shells (preferences keys, search, account switcher), full primitive APIs (variants/sizes/props for all 61 + chart wrapper snippet), per-screen chart specs with stealable techniques, table/list/URL-state/cookie-layout patterns, dead-button must-wire list, ASCII + verdict for all 25+ pages, 220-line map technical breakdown, MVP reuse map, file index, checklist.
+- **Design-system catalog (2026-09-06)** — new `context/design-system.md`: app shells ASCII, condensed tokens, all 61 primitives grouped by MVP use, full chart inventory per screen (recharts types + Funnel + d3-geo map), ASCII + verdict (reuse/adapt/reference/skip) for all 25+ pages, MVP reuse map, new-page checklist. Verified against every screen `route.tsx`.
 - **Skills bootstrap via `Skills.py --yes` (2026-09-06)** — installed 34 skills into `.agents/skills/` (8 GSAP, 1 Hallmark, 13 Taste, 12 Emil Kowalski — all security-clean per installer). Impeccable design engine FAILED (`npm ECOMPROMISED` — skipped, not forced). Side effect: `npm init -y` created root `package.json`. Open: Spec Kit (`specify`) install+init DONE (2026-09-06) — `specify-cli` via uv, `specify init --here --force --non-interactive --integration opencode`; `.specify/` + `.opencode/commands/` scaffolded, root `AGENTS.md` untouched.
 - **Key-collision fix in `GitHubRepositoriesMenu` (2026-09-06)** — the menu hrefs were all `#` while the list used `key={repository.href}`, causing duplicate-key warnings; switched key to `repository.label`. No logic or routes changed.
 - **Dashboard setup in `admin-dashboard/` (2026-09-06)** — pruned unused docs (`README.md`, `CONTRIBUTING.md`, `LICENSE`, `media/`); set package and display naming (`Admin Dashboard` in `package.json`, `package-lock.json`, `.cta.json`, `manifest.json`, `app-config.ts`, `AGENTS.md`); neutralized sidebar support card and header repository menu (placeholder links); standardized demo data on placeholder identities (`Alex Carter`, `Jordan Lee`, `Example Corp`, `example.com`). No logic or routes changed; no build/lint run per project rule (validation only on explicit request).
@@ -28,12 +33,19 @@ unambiguous rules, and instant project understanding via the three living contex
 
 ## Next Up
 
-1. Decide whether the `folder-structure` skill trees need simplification (user wants "concise and clear, senior-engineer hierarchy")
-2. Fill the template `context/*.md` placeholders per project
+1. Create `src/lib/mplads-schema.ts` (Work/Anomaly/Evidence/Activity Zod shapes) + seed mock data
+2. Build `/overview` (KPIs + priority queue; India map after TopoJSON sourced)
+3. Build `/works` table + `/works/:workId` dossier (anomaly explainer first — it's the differentiator)
+4. Wire `/ai` on chat donor; decide AI provider + tool layer
+5. Replace sidebar nav with MVP items; prune nothing (leave template routes, just unnavigated)
 
 ## Open Questions
 
-- None
+- DB choice for works/anomalies/evidence (sqlite/postgres/supabase?) and where the anomaly engine lives (server fns vs separate Python service)?
+- Source for India state/district TopoJSON compatible with the d3-geo map pattern?
+- AI provider + model for copilot tool calls (needs structured output + low cost for demo)?
+- eSAKSHI data ingestion: scrape public dashboard now, or stay on hand-built mock for prototype?
+- Auth backend scope: role switcher on mock for prototype, real sessions post-MVP?
 
 ## Architecture Decisions
 

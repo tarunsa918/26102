@@ -35,6 +35,7 @@
 
 | ID | Date | Decision | Status | Affects |
 |----|------|----------|--------|---------|
+| ADR-006 | 2026-09-06 | SIH MVP: 5 routes, reuse template components (not structure), UI-first prototype on mock data | Accepted | admin-dashboard/, all context files |
 | ADR-005 | 2026-09-06 | Skip Impeccable install after npm ECOMPROMISED refusal; do not --force | Accepted | repo root tooling |
 | ADR-004 | 2026-09-06 | Initial dashboard setup: neutral naming, placeholder demo data, pruned docs | Accepted | admin-dashboard/ (docs, config, demo data) |
 | ADR-003 | 2026-08-11 | Remove Scaffold.py; canonical trees are the source of truth | Accepted | repo root, folder-structure skill |
@@ -63,6 +64,16 @@
 <!-- Newest decisions go at the top of this section. Keep this section growing — it is
      the living memory of the project. Delete the two example entries below once you
      have real decisions. -->
+
+### ADR-006: SIH MVP scope + template-reuse strategy + UI-first prototype
+- **Date**: 2026-09-06
+- **Status**: Accepted
+- **Context**: SIH26102 (MoSPI) needs an AI anomaly-detection workspace for MPLADS works. We own a 20+-screen TanStack Start + shadcn template. Design study (`chat.md`) concluded: 5 routes max, officer-loop-driven, explain every alert.
+- **Options considered**: Build MVP screens from scratch (rejected — template donors cover tables/charts/chat/files; custom work would look worse and take longer); adopt template nav as-is (rejected — CRM/Finance/etc. pages aren't the officer's workflow); backend-first (rejected — judge demo needs working UI now).
+- **Decision**: 5 routes (`/login`, `/overview`, `/works`, `/works/:workId`, `/ai`); clone closest donor screens and adapt; charts via `ui/chart.tsx`+recharts, India map via `shipment-route-map.tsx` pattern + added TopoJSON; prototype on bundled mock data typed by shared Zod shapes so server fns slot in later.
+- **Why**: Components are professional and proven; structure is wrong for the domain. Mock-behind-contract keeps the demo real today and the backend swap trivial tomorrow.
+- **Consequences**: Must add India TopoJSON + choose DB + anomaly-engine home + AI provider (open questions). Template pages outside the loop stay unbuilt.
+- **Affects**: `admin-dashboard/`, all context files
 
 ### ADR-005: Skip Impeccable — npm blocked it as compromised, do not force
 - **Date**: 2026-09-06
