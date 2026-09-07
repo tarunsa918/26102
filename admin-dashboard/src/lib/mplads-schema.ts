@@ -36,6 +36,12 @@ export const workSchema = z.object({
   lastUpdate: yyyyMmDdSchema,
   lat: z.number().min(-90).max(90),
   lon: z.number().min(-180).max(180),
+  tenderHolder: z.string().min(1),
+  tenderAwardedBy: z.string().min(1),
+  department: z.string().min(1),
+  labourDeployed: z.number().int().min(0),
+  demandedDays: z.number().int().min(1),
+  returnedLakh: z.number().nonnegative(),
 });
 
 export const anomalySignalSchema = z.object({

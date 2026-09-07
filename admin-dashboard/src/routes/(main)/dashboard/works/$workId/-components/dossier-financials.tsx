@@ -34,9 +34,16 @@ interface FundSlice {
 }
 
 export function DossierFinancials({ work, series, peerLabel, utilisationPct }: DossierFinancialsProps) {
-  const balanceLakh = Math.max(work.sanctionedLakh - work.expenditureLakh, 0);
+  const returnedLakh = work.returnedLakh;
+  const balanceLakh = Math.max(work.sanctionedLakh - work.expenditureLakh - returnedLakh, 0);
   const slices: FundSlice[] = [
     { account: "Spent", amount: work.expenditureLakh, key: "spent", percentage: utilisationPct },
+    {
+      account: "Returned",
+      amount: returnedLakh,
+      key: "returned",
+      percentage: work.sanctionedLakh > 0 ? (returnedLakh / work.sanctionedLakh) * 100 : 0,
+    },
     {
       account: "Balance",
       amount: balanceLakh,
@@ -47,18 +54,24 @@ export function DossierFinancials({ work, series, peerLabel, utilisationPct }: D
   const fundConfig = {
     amount: { label: "Funds" },
     balance: { color: "var(--chart-2)", label: "Balance" },
+    returned: { color: "var(--chart-5)", label: "Returned" },
     spent: { color: "var(--chart-4)", label: "Spent" },
   } satisfies ChartConfig;
+  const fundFill: Record<string, string> = {
+    balance: "var(--chart-2)",
+    returned: "var(--chart-5)",
+    spent: "var(--chart-4)",
+  };
   const fundData = slices.map((slice) => ({
     ...slice,
-    fill: slice.key === "spent" ? "var(--chart-4)" : "var(--chart-2)",
+    fill: fundFill[slice.key] ?? "var(--chart-2)",
   }));
 
   return (
     <div className="flex flex-col gap-4 py-4">
       <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
-        <div className="grid grid-cols-1 xl:grid-cols-6">
-          <Card className="gap-5 overflow-hidden rounded-none border-0 border-foreground/10 border-b ring-0 xl:col-span-2 xl:border-r">
+        <div className="grid grid-cols-1 xl:grid-cols-12">
+          <Card className="gap-5 overflow-hidden rounded-none border-0 border-foreground/10 border-b ring-0 xl:col-span-3 xl:border-r">
             <CardHeader>
               <CardTitle className="font-normal">Sanctioned</CardTitle>
             </CardHeader>
@@ -71,7 +84,7 @@ export function DossierFinancials({ work, series, peerLabel, utilisationPct }: D
               </div>
             </CardContent>
           </Card>
-          <Card className="gap-5 overflow-hidden rounded-none border-0 border-foreground/10 border-b ring-0 xl:col-span-2 xl:border-r">
+          <Card className="gap-5 overflow-hidden rounded-none border-0 border-foreground/10 border-b ring-0 xl:col-span-3 xl:border-r">
             <CardHeader>
               <CardTitle className="font-normal">Spent</CardTitle>
             </CardHeader>
@@ -87,7 +100,22 @@ export function DossierFinancials({ work, series, peerLabel, utilisationPct }: D
               </Badge>
             </CardContent>
           </Card>
-          <Card className="gap-5 overflow-hidden rounded-none border-0 ring-0 xl:col-span-2">
+          <Card className="gap-5 overflow-hidden rounded-none border-0 border-foreground/10 border-b ring-0 xl:col-span-3 xl:border-r">
+            <CardHeader>
+              <CardTitle className="font-normal">Returned</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-end justify-between">
+              <div className="flex flex-col gap-1">
+                <div className="font-heading text-3xl tabular-nums leading-none tracking-tight">
+                  {formatLakh(returnedLakh)}
+                </div>
+                <p className="text-muted-foreground text-xs">
+                  {returnedLakh > 0 ? "Surrendered back" : "Nothing returned"}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="gap-5 overflow-hidden rounded-none border-0 ring-0 xl:col-span-3">
             <CardHeader>
               <CardTitle className="font-normal">Balance</CardTitle>
             </CardHeader>

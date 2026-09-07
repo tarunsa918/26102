@@ -83,13 +83,23 @@ function PeerBar({ actual, median, severity }: { actual: number; median: number;
 }
 
 export function DossierAnomalies({ work, flags, onGoTab, onAskAI }: DossierAnomaliesProps) {
+  const duplicateFlag = flags.find((flag) => flag.kind === "duplicate");
+  const twinSignal =
+    duplicateFlag?.signals.find((signal) => /duplicate|near/i.test(signal.label)) ?? duplicateFlag?.signals[0];
+
   if (flags.length === 0) {
     return (
-      <div className="py-4">
+      <div className="flex flex-col gap-4 py-4">
         <Empty>
           <EmptyHeader>
             <EmptyTitle>No open flags</EmptyTitle>
             <EmptyDescription>Sentinel found no anomalies for this work in the demo dataset.</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>No overlapping scope found</EmptyTitle>
+            <EmptyDescription>No overlapping scope found in demo data.</EmptyDescription>
           </EmptyHeader>
         </Empty>
       </div>
@@ -182,6 +192,35 @@ export function DossierAnomalies({ work, flags, onGoTab, onAskAI }: DossierAnoma
         Flags mean “needs review,” never fraud · peer groups are {TYPE_LABELS[work.type].toLowerCase()} works in{" "}
         {work.district}.
       </p>
+      {duplicateFlag && twinSignal ? (
+        <Card>
+          <CardHeader>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge className="rounded-sm" variant="outline">
+                Overlap verdict
+              </Badge>
+            </div>
+            <CardTitle className="text-base">{duplicateFlag.headline}</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            <div className="flex items-start gap-2 text-sm">
+              <ArrowLeftRight aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+              <p>
+                <span className="text-muted-foreground">{twinSignal.label}: </span>
+                {twinSignal.value}
+              </p>
+            </div>
+            <p className="text-muted-foreground text-sm">{duplicateFlag.corroboration}</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>No overlapping scope found</EmptyTitle>
+            <EmptyDescription>No overlapping scope found in demo data.</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      )}
     </div>
   );
 }

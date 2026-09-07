@@ -4,7 +4,8 @@ import { Separator } from "@/components/ui/separator";
 import { formatINR, formatWorkDate } from "@/lib/mplads-mock";
 import type { Decision, Work } from "@/lib/mplads-schema";
 
-import { DECISION_META, relativeDay, TYPE_LABELS } from "./dossier-data";
+import { DECISION_META, relativeDay, TYPE_LABELS, tenderScheduleLabel } from "./dossier-data";
+import { WorkLocationMap } from "./work-location-map";
 
 interface DossierOverviewProps {
   work: Work;
@@ -60,10 +61,31 @@ export function DossierOverview({ work, decision, stallDays, utilisationPct }: D
         <Separator className="my-4" />
 
         <div className="flex flex-col gap-2">
+          <h2 className="font-heading font-medium text-base">Tender &amp; execution</h2>
+          <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-3 xl:gap-12">
+            <div className="flex flex-col gap-5">
+              <Fact label="Tender holder" value={work.tenderHolder} />
+              <Fact label="Awarded by" value={work.tenderAwardedBy} />
+            </div>
+            <div className="flex flex-col gap-5">
+              <Fact label="Department" value={work.department} />
+              <Fact label="Labour deployed" value={`${work.labourDeployed} workers`} mono />
+            </div>
+            <div className="flex flex-col gap-5">
+              <Fact label="Demanded vs elapsed" value={tenderScheduleLabel(work)} mono />
+              <Fact label="Creation date" value={formatWorkDate(work.sanctionDate)} />
+            </div>
+          </div>
+        </div>
+
+        <Separator className="my-4" />
+
+        <div className="flex flex-col gap-2">
           <h2 className="font-heading font-medium text-base">Location</h2>
           <p className="text-muted-foreground text-sm">
             {work.district}, {work.state} · {work.lat.toFixed(2)}°N {work.lon.toFixed(2)}°E
           </p>
+          <WorkLocationMap work={work} />
         </div>
       </div>
 
