@@ -35,6 +35,7 @@
 
 | ID | Date | Decision | Status | Affects |
 |----|------|----------|--------|---------|
+| ADR-007 | 2026-09-07 | SPEC 00 mock contract: seeded mulberry32 + fixed demo date, derived geo rollup, INR/lakh helpers on existing idioms | Accepted | admin-dashboard/src/lib/mplads-schema.ts, mplads-mock.ts |
 | ADR-006 | 2026-09-06 | SIH MVP: 5 routes, reuse template components (not structure), UI-first prototype on mock data | Accepted | admin-dashboard/, all context files |
 | ADR-005 | 2026-09-06 | Skip Impeccable install after npm ECOMPROMISED refusal; do not --force | Accepted | repo root tooling |
 | ADR-004 | 2026-09-06 | Initial dashboard setup: neutral naming, placeholder demo data, pruned docs | Accepted | admin-dashboard/ (docs, config, demo data) |
@@ -60,6 +61,16 @@
 ---
 
 ## Decision Entries
+
+### ADR-007: SPEC 00 mock-data contract — seeded RNG, fixed demo date, derived rollup
+- **Date**: 2026-09-07
+- **Status**: Accepted
+- **Context**: SPEC 00 needs one shared dummy-data contract (40 works, 12 flags, flagship W-1014) that renders identically on every reload and that future server fns + ML can return behind the same shapes.
+- **Options considered**: `Math.random` + live `new Date()` (rejected — demo drifts between reloads/judges); hand-written static JSON (rejected — 40 works × relations by hand is error-prone and hard to reseed); seeded builder (chosen).
+- **Decision**: `mulberry32` seeded `26102` + fixed `DEMO_TODAY 2026-09-07` (all dates derived via date-fns, never `Date.now`); geo rollup computed from works (not hand-written); money via existing `formatCurrency` idiom (`formatINR`) plus a `formatLakh` shorthand for the `₹58.9L` comparison template; delay/duplicate anomalies use the schema's nullable median/actual fields; verification via throwaway ts-node/native-hook script (deleted after, byte-identical across runs).
+- **Why**: Deterministic seed = every reload renders the identical demo the judges approved; derived rollup can't drift from the works table; reusing `formatCurrency`/date-fns keeps the ponytail ladder (existing repo code first, minimal new code).
+- **Consequences**: Routes must import shapes only from `mplads-schema.ts`; shape change = bump `mplads-demo-v1` and reseed; localStorage persistence + `-components/data.ts` slices belong to SPEC 01–05, not here.
+- **Affects**: `admin-dashboard/src/lib/mplads-schema.ts`, `admin-dashboard/src/lib/mplads-mock.ts`
 
 <!-- Newest decisions go at the top of this section. Keep this section growing — it is
      the living memory of the project. Delete the two example entries below once you
