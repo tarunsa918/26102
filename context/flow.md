@@ -130,7 +130,7 @@ sequenceDiagram
 | `/overview` | **to build** | KPIs + map + priority queue |
 | `/dashboard/overview` | stub (SPEC 01) → SPEC 02 builds the queue here | Entry landing inside the dashboard shell |
 | `/dashboard/overview` | **BUILT (SPEC 02)**: `KpiStrip` + `IndiaRiskMap` + `PriorityQueue` (?state= two-way filter, role scoping) | Morning triage |
-| `/works` | **to build** | Search/filter/sort works |
+| `/works` | **BUILT (SPEC 03)** at `/dashboard/works`: full ledger (URL `?lens=&state=&district=&type=&q=`, 10-col table, pagination) | Search/filter/sort works |
 | `/works/:workId` | **to build** (`$param.tsx` pattern) | Dossier |
 | `/ai` | **to build** on `(main)/chat/` | Global copilot |
 | Sidebar nav | `navigation/sidebar/sidebar-items.ts` | Replace groups with MVP nav (Overview/Works/AI + dossier via click) |

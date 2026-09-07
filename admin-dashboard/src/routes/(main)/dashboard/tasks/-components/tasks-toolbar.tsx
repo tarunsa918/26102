@@ -10,7 +10,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -73,9 +72,8 @@ export function TasksToolbar<TData extends RowData>({ table }: TasksToolbarProps
             View
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-38">
-            <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
-            <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
               {hideableColumns.map((column) => (
                 <DropdownMenuCheckboxItem
                   key={column.id}

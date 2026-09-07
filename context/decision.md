@@ -35,6 +35,7 @@
 
 | ID | Date | Decision | Status | Affects |
 |----|------|----------|--------|---------|
+| ADR-012 | 2026-09-07 | SPEC 03: URL-owned filters + table-local checks, plain anchors to dossier, no fake skeleton, relative Updated sub-line | Accepted | dashboard/works |
 | ADR-011 | 2026-09-07 | Blank-map root cause: wrongly-wound fit bbox → world-scale projection; adopted React-19-native simple-maps fork with verified fit | Accepted | overview india-risk-map, package.json |
 | ADR-010 | 2026-09-07 | SPEC 02 polish: ministry-first default, CRM outline badges, visible map error+retry | Accepted | role store, overview components |
 | ADR-009 | 2026-09-07 | SPEC 02: vendored 2015-vintage states GeoJSON (slimmed, GeoJSON not TopoJSON), plain-Table queue, SVG-anchor map selection, Bhopal scope | Accepted | dashboard/overview, public/geo, role store |
@@ -65,6 +66,16 @@
 ---
 
 ## Decision Entries
+
+### ADR-012: SPEC 03 works table — URL-owned filters, interim anchors, honest states
+- **Date**: 2026-09-07
+- **Status**: Accepted
+- **Context**: SPEC 03 demands shareable `?lens=&state=&q=` plus header selects, toolbar checks, search, sort, pagination — without prop-drilling the table instance up to the route.
+- **Options considered**: All filters in table state (rejected — URL wouldn't restore); lifting `useTable` into the route (rejected — breaks the tasks donor structure); typed `Link` to dossier (rejected — SPEC 04 route doesn't exist, tsc fails); fake skeleton shimmer on sync data (rejected — decoration).
+- **Decision**: `?lens=&state=&district=&type=&q=` owned by the URL (extends acceptance superset), synced into column filters via effect + page reset; severity/kind multi-checks stay table-local; header Reset clears URL + bumps a reset key that clears local checks; dossier links are plain anchors until SPEC 04; Updated sub-line shows relative "Xd ago" (date-only data has no times for `h:mm a`).
+- **Why**: Single source of truth per filter, every combination shareable/restorable, donor file shapes preserved, zero dead controls.
+- **Consequences**: Typing in search navigates (replace, no reload, focus kept); severity/kind selections don't survive reload (documented, out of acceptance scope).
+- **Affects**: `dashboard/works/` (data/columns/works-toolbar/table/route)
 
 ### ADR-011: Blank map was a wrong-winding fit bbox; now on react19-simple-maps
 - **Date**: 2026-09-07

@@ -39,6 +39,7 @@ import { Route as mainDashboardProfileRouteRouteImport } from './routes/(main)/d
 import { Route as mainDashboardRolesRouteRouteImport } from './routes/(main)/dashboard/roles/route'
 import { Route as mainDashboardTasksRouteRouteImport } from './routes/(main)/dashboard/tasks/route'
 import { Route as mainDashboardUsersRouteRouteImport } from './routes/(main)/dashboard/users/route'
+import { Route as mainDashboardWorksRouteRouteImport } from './routes/(main)/dashboard/works/route'
 import { Route as mainAuthV1LoginRouteRouteImport } from './routes/(main)/auth/v1/login/route'
 import { Route as mainAuthV1RegisterRouteRouteImport } from './routes/(main)/auth/v1/register/route'
 import { Route as mainAuthV2LoginRouteRouteImport } from './routes/(main)/auth/v2/login/route'
@@ -214,6 +215,11 @@ const mainDashboardUsersRouteRoute = mainDashboardUsersRouteRouteImport.update({
   path: '/users',
   getParentRoute: () => mainDashboardRouteRoute,
 } as any)
+const mainDashboardWorksRouteRoute = mainDashboardWorksRouteRouteImport.update({
+  id: '/works',
+  path: '/works',
+  getParentRoute: () => mainDashboardRouteRoute,
+} as any)
 const mainAuthV1LoginRouteRoute = mainAuthV1LoginRouteRouteImport.update({
   id: '/(main)/auth/v1/login',
   path: '/auth/v1/login',
@@ -288,6 +294,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/roles': typeof mainDashboardRolesRouteRoute
   '/dashboard/tasks': typeof mainDashboardTasksRouteRoute
   '/dashboard/users': typeof mainDashboardUsersRouteRoute
+  '/dashboard/works': typeof mainDashboardWorksRouteRoute
   '/dashboard/$': typeof mainDashboardSplatRoute
   '/dashboard/': typeof mainDashboardIndexRoute
   '/auth/v1/login': typeof mainAuthV1LoginRouteRoute
@@ -327,6 +334,7 @@ export interface FileRoutesByTo {
   '/dashboard/roles': typeof mainDashboardRolesRouteRoute
   '/dashboard/tasks': typeof mainDashboardTasksRouteRoute
   '/dashboard/users': typeof mainDashboardUsersRouteRoute
+  '/dashboard/works': typeof mainDashboardWorksRouteRoute
   '/dashboard/$': typeof mainDashboardSplatRoute
   '/dashboard': typeof mainDashboardIndexRoute
   '/auth/v1/login': typeof mainAuthV1LoginRouteRoute
@@ -368,6 +376,7 @@ export interface FileRoutesById {
   '/(main)/dashboard/roles': typeof mainDashboardRolesRouteRoute
   '/(main)/dashboard/tasks': typeof mainDashboardTasksRouteRoute
   '/(main)/dashboard/users': typeof mainDashboardUsersRouteRoute
+  '/(main)/dashboard/works': typeof mainDashboardWorksRouteRoute
   '/(main)/dashboard/$': typeof mainDashboardSplatRoute
   '/(main)/dashboard/': typeof mainDashboardIndexRoute
   '/(main)/auth/v1/login': typeof mainAuthV1LoginRouteRoute
@@ -410,6 +419,7 @@ export interface FileRouteTypes {
     | '/dashboard/roles'
     | '/dashboard/tasks'
     | '/dashboard/users'
+    | '/dashboard/works'
     | '/dashboard/$'
     | '/dashboard/'
     | '/auth/v1/login'
@@ -449,6 +459,7 @@ export interface FileRouteTypes {
     | '/dashboard/roles'
     | '/dashboard/tasks'
     | '/dashboard/users'
+    | '/dashboard/works'
     | '/dashboard/$'
     | '/dashboard'
     | '/auth/v1/login'
@@ -489,6 +500,7 @@ export interface FileRouteTypes {
     | '/(main)/dashboard/roles'
     | '/(main)/dashboard/tasks'
     | '/(main)/dashboard/users'
+    | '/(main)/dashboard/works'
     | '/(main)/dashboard/$'
     | '/(main)/dashboard/'
     | '/(main)/auth/v1/login'
@@ -724,6 +736,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardUsersRouteRouteImport
       parentRoute: typeof mainDashboardRouteRoute
     }
+    '/(main)/dashboard/works': {
+      id: '/(main)/dashboard/works'
+      path: '/works'
+      fullPath: '/dashboard/works'
+      preLoaderRoute: typeof mainDashboardWorksRouteRouteImport
+      parentRoute: typeof mainDashboardRouteRoute
+    }
     '/(main)/auth/v1/login': {
       id: '/(main)/auth/v1/login'
       path: '/auth/v1/login'
@@ -806,6 +825,7 @@ interface mainDashboardRouteRouteChildren {
   mainDashboardRolesRouteRoute: typeof mainDashboardRolesRouteRoute
   mainDashboardTasksRouteRoute: typeof mainDashboardTasksRouteRoute
   mainDashboardUsersRouteRoute: typeof mainDashboardUsersRouteRoute
+  mainDashboardWorksRouteRoute: typeof mainDashboardWorksRouteRoute
   mainDashboardSplatRoute: typeof mainDashboardSplatRoute
   mainDashboardIndexRoute: typeof mainDashboardIndexRoute
   mainDashboardlegacyAnalyticsV1RouteRoute: typeof mainDashboardlegacyAnalyticsV1RouteRoute
@@ -838,6 +858,7 @@ const mainDashboardRouteRouteChildren: mainDashboardRouteRouteChildren = {
   mainDashboardRolesRouteRoute: mainDashboardRolesRouteRoute,
   mainDashboardTasksRouteRoute: mainDashboardTasksRouteRoute,
   mainDashboardUsersRouteRoute: mainDashboardUsersRouteRoute,
+  mainDashboardWorksRouteRoute: mainDashboardWorksRouteRoute,
   mainDashboardSplatRoute: mainDashboardSplatRoute,
   mainDashboardIndexRoute: mainDashboardIndexRoute,
   mainDashboardlegacyAnalyticsV1RouteRoute:
