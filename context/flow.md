@@ -92,7 +92,7 @@ sequenceDiagram
 
 ## Function call map
 
-### Dossier (to build)
+### Dossier (BUILT + extended on 006)
 ```
 /works/:workId (route.tsx, composes)
   ├─ <WorkSummary/>            (header: IDs, status badge, amounts)
@@ -104,6 +104,7 @@ sequenceDiagram
   ├─ <DecisionBar/>            (Verified/Dismissed/Action Required + notes form)
   └─ <ContextualAI/>           (chat/ donor: bubble thread + tool cards)
 ```
+Extended: tender & execution block (holder/awarder/dept/labour/demanded-vs-elapsed), `WorkLocationMap` (single-pin copy of india-risk-map), spent/balance/returned strip, duplicate overlap verdict. Global `<PageAssistant/>` floating toggle mounted in dashboard shell (page-context scripted answers).
 
 ### Overview (to build)
 ```
@@ -131,7 +132,9 @@ sequenceDiagram
 | `/dashboard/overview` | stub (SPEC 01) → SPEC 02 builds the queue here | Entry landing inside the dashboard shell |
 | `/dashboard/overview` | **BUILT (SPEC 02)**: `KpiStrip` + `IndiaRiskMap` + `PriorityQueue` (?state= two-way filter, role scoping) | Morning triage |
 | `/works` | **BUILT (SPEC 03)** at `/dashboard/works`: full ledger (URL `?lens=&state=&district=&type=&q=`, 10-col table, pagination) | Search/filter/sort works |
-| `/works/:workId` | **to build** (`$param.tsx` pattern) | Dossier |
+| `/works/:workId` | **BUILT (SPEC 04 + 006 extension)** at `/dashboard/works/$workId`: 6 tabs (overview/financials/progress/anomalies/evidence/activity), tender block, map pin, money strip, duplicate verdict, sticky decision bar, contextual AI | Dossier |
+| Adopted (006, in-place relabel on mock data) | `finance` → fund flow · `analytics` → performance · `tasks` → verification queue · `calendar` → deadlines (56 derived events) · `file-manager` → documents library · `invoice` → UC tracking | Officer workflow pages |
+| Sidebar nav | single MPLADS group: Overview/Works/Fund Flow/Performance/Verifications/Deadlines/Documents/UC Tracking (006) | Discoverability |
 | `/ai` | **to build** on `(main)/chat/` | Global copilot |
 | Sidebar nav | `navigation/sidebar/sidebar-items.ts` | Replace groups with MVP nav (Overview/Works/AI + dossier via click) |
 

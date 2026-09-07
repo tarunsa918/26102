@@ -35,6 +35,10 @@
 
 | ID | Date | Decision | Status | Affects |
 |----|------|----------|--------|---------|
+| ADR-016 | 2026-09-07 | Parallel worktree lanes (A/B/C/D) merged conflict-free into 006, build after each merge | Accepted | git workflow, 006-officer-workspace |
+| ADR-015 | 2026-09-07 | Single MPLADS sidebar group (8 links) + floating page-level Ask-AI toggle on every dashboard page | Accepted | sidebar-items.ts, dashboard shell, page-assistant |
+| ADR-014 | 2026-09-07 | Adopt template pages in place (finance/analytics/tasks/calendar/file-manager/invoice) — relabel + rebind to mock, layouts untouched | Accepted | 6 template screens |
+| ADR-013 | 2026-09-07 | Extend Work contract: tenderHolder/tenderAwardedBy/department/labourDeployed/demandedDays/returnedLakh, separate rng stream | Accepted | mplads-schema.ts, mplads-mock.ts |
 | ADR-012 | 2026-09-07 | SPEC 03: URL-owned filters + table-local checks, plain anchors to dossier, no fake skeleton, relative Updated sub-line | Accepted | dashboard/works |
 | ADR-011 | 2026-09-07 | Blank-map root cause: wrongly-wound fit bbox → world-scale projection; adopted React-19-native simple-maps fork with verified fit | Accepted | overview india-risk-map, package.json |
 | ADR-010 | 2026-09-07 | SPEC 02 polish: ministry-first default, CRM outline badges, visible map error+retry | Accepted | role store, overview components |
@@ -66,6 +70,46 @@
 ---
 
 ## Decision Entries
+
+### ADR-016: Parallel worktree lanes merged conflict-free, build per merge
+- **Date**: 2026-09-07
+- **Status**: Accepted
+- **Context**: User rejected N-branches-from-commit Sit-and-merge-later in favor of parallel development with isolated verification, then chose single-branch sequential — then ordered "commit current, implement all in parallel."
+- **Options considered**: 4 branches merged at the end with one big build (rejected — errors unattributable); single branch with parallel agents on disjoint files (rejected — shared working tree clobbers); worktrees, one per lane, each with junctioned node_modules (chosen).
+- **Decision**: `006-officer-workspace` + 4 worktrees (lane/contract-dossier, lane/fund-perf, lane/adopt-pages, lane/nav-ai) with disjoint file ownership; each lane verified tsc/biome/build in isolation; committed per lane; merged --no-ff in A→B→C→D order with a `vite build` after every merge.
+- **Why**: Isolation makes every failure attributable to one lane; disjoint ownership made all 4 merges conflict-free; per-merge builds prove the integration never broke.
+- **Consequences**: Worktrees removed after merge; lane branches kept for record. india-states.json now vendored twice (overview + dossier) — accepted duplication under the no-cross-screen-import law.
+- **Affects**: git workflow, 006-officer-workspace
+
+### ADR-015: Single MPLADS sidebar group + floating page assistant
+- **Date**: 2026-09-07
+- **Status**: Accepted
+- **Context**: Created pages were not discoverable (template nav); user wants an Ask-AI toggle on every page answering about current context.
+- **Options considered**: Keep template nav + add links (rejected — officer goals buried); separate /ai page only (rejected — user explicitly wants omnipresent toggle); floating toggle mounted once in dashboard shell with per-route scripted context (chosen).
+- **Decision**: One MPLADS group (Overview/Works/Fund Flow/Performance/Verifications/Deadlines/Documents/UC Tracking); `<PageAssistant/>` (generalized copy of dossier contextual-ai, local work lookup duplicated, no cross-imports) mounted in dashboard route with route-id → context mapping; Sheet on all sizes via floating button.
+- **Why**: Discoverability in one glance; toggle follows the officer instead of demanding a page visit; scripted answers stay honest until SPEC 05's real brain.
+- **Consequences**: Dossier shows both inline assistant (anomalies+ tabs) and shell toggle — revisit overlap in SPEC 05.
+- **Affects**: sidebar-items.ts, dashboard shell, page-assistant
+
+### ADR-014: Adopt template pages in place — rename, don't recreate
+- **Date**: 2026-09-07
+- **Status**: Accepted
+- **Context**: finance/analytics/tasks/calendar/file-manager/invoice already exist in premium form; user wants many officer pages without rebuilds.
+- **Options considered**: New MPLADS routes copying donors (rejected — duplicates code for identical layouts); editing shared primitives (rejected — repo law); in-place relabel + rebind to mock aggregates (chosen).
+- **Decision**: Each page keeps layout/components; only labels/data change; every control works or is removed (CSV exports, working filters, wired upload prepends); dead template buttons (Settings, currency select, Add event, Download PDF, Import data) removed.
+- **Why**: Premium layouts stay pixel-faithful; "ugly custom KPI" failure mode eliminated by construction.
+- **Consequences**: Template demo content gone from those pages (kept in git history); any future template sync must be manual.
+- **Affects**: 6 template screens
+
+### ADR-013: Work contract gains tender/execution/money fields on a separate rng stream
+- **Date**: 2026-09-07
+- **Status**: Accepted
+- **Context**: Dossier must show tender holder/awarder, department, labour, demanded time, returned money — none existed in SPEC-00 contract.
+- **Options considered**: Derive from existing fields (rejected — agency≠tender holder semantically, labour would be invented text); extend schema + reseed (chosen) with a separate mulberry32(MPLADS_SEED+500) stream so all existing demo values stay byte-identical.
+- **Decision**: workSchema += tenderHolder/tenderAwardedBy/department/labourDeployed/demandedDays/returnedLakh; returnedLakh capped at sanctioned−expenditure headroom so spent+returned+balance ≡ sanctioned; W-1014 pinned (Contractor-07, District Authority Bhopal, PWD, 42, 330, 0).
+- **Why**: Real demo fields with zero drift in previously approved numbers; donut math always sums to 100%.
+- **Consequences**: Shape change = future server fns must return the new fields; seed-bundle key unchanged since values are additive.
+- **Affects**: mplads-schema.ts, mplads-mock.ts
 
 ### ADR-012: SPEC 03 works table — URL-owned filters, interim anchors, honest states
 - **Date**: 2026-09-07
