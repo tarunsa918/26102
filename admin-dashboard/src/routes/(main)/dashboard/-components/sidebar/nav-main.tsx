@@ -163,6 +163,7 @@ function NavLinkItem({ item, isActive, showIconFallback }: NavLinkItemProps) {
         aria-disabled={item.disabled}
         tooltip={item.title}
         isActive={isActive}
+        className="cursor-pointer"
       >
         <NavLinkIcon item={item} showFallback={showIconFallback} />
         <span>{item.title}</span>
@@ -193,7 +194,7 @@ function NavDropdownItem({ item, isActive, isSubItemActive }: NavDropdownItemPro
     <SidebarMenuItem>
       <DropdownMenu>
         <DropdownMenuTrigger
-          render={<SidebarMenuButton tooltip={item.title} isActive={isActive} disabled={item.disabled} />}
+          render={<SidebarMenuButton tooltip={item.title} isActive={isActive} disabled={item.disabled} className="cursor-pointer" />}
         >
           {Icon ? <Icon /> : <CollapsedIconFallback title={item.title} />}
           <span>{item.title}</span>
@@ -240,7 +241,7 @@ function NavCollapsibleItem({ item, isActive, defaultOpen, isSubItemActive }: Na
       className="group/collapsible"
     >
       <CollapsibleTrigger
-        render={<SidebarMenuButton tooltip={item.title} isActive={isActive} disabled={item.disabled} />}
+        render={<SidebarMenuButton tooltip={item.title} isActive={isActive} disabled={item.disabled} className="cursor-pointer" />}
       >
         {Icon && <Icon />}
         <span>{item.title}</span>
@@ -265,6 +266,7 @@ function NavCollapsibleItem({ item, isActive, defaultOpen, isSubItemActive }: Na
                   }
                   aria-disabled={subItem.disabled}
                   isActive={isSubItemActive(subItem.url)}
+                  className="cursor-pointer"
                 >
                   {SubIcon && <SubIcon />}
                   <span>{subItem.title}</span>
