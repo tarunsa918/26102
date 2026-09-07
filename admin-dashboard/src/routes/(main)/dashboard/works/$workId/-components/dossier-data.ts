@@ -187,6 +187,14 @@ export function milestonesFor(work: Work): Milestone[] {
   });
 }
 
+export function elapsedSinceSanction(work: Work): number {
+  return differenceInCalendarDays(parseDay(DEMO_TODAY_ISO), parseDay(work.sanctionDate));
+}
+
+export function tenderScheduleLabel(work: Work): string {
+  return `${work.demandedDays}d demanded · ${elapsedSinceSanction(work)}d elapsed`;
+}
+
 export function relativeDay(iso: string): string {
   const diff = differenceInCalendarDays(parseDay(DEMO_TODAY_ISO), parseDay(iso.slice(0, 10)));
   if (diff <= 0) {

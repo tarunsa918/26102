@@ -46,6 +46,8 @@ const DISTRICTS: DistrictSeed[] = [
   { state: "Assam", district: "Dibrugarh", lat: 27.47, lon: 94.91 },
 ];
 
+const DEPARTMENTS = ["PWD", "Water Board", "Municipal Corp", "Rural Works"] as const;
+
 const FLAG_PLAN: { kind: AnomalyKind; severity: Severity }[] = [
   { kind: "cost", severity: "high" },
   { kind: "cost", severity: "high" },
@@ -188,6 +190,7 @@ function shuffled<T>(rng: () => number, items: T[]): T[] {
 
 function buildWorks(): Work[] {
   const rng = mulberry32(MPLADS_SEED);
+  const extraRng = mulberry32(MPLADS_SEED + 500);
   const ids: string[] = [];
   for (let n = 1001; n <= 1040; n += 1) {
     ids.push(`W-${n}`);
@@ -223,13 +226,25 @@ function buildWorks(): Work[] {
       ? "2025-10-15"
       : dayString(new Date(parseDay(sanctionDate).getTime() + (270 + int(rng, 0, 270)) * 86400000));
     const lastUpdate = isFlagship ? dayString(subDays(DEMO_TODAY, 96)) : lastUpdateFor(rng, status);
+    const district = isFlagship ? "Bhopal" : place.district;
+
+    const tenderHolder = isFlagship ? "Contractor-07" : agency;
+    const tenderAwardedBy = `District Authority, ${district}`;
+    const department = isFlagship ? "PWD" : DEPARTMENTS[int(extraRng, 0, DEPARTMENTS.length - 1)];
+    const labourDeployed = isFlagship ? 42 : int(extraRng, 8, 60);
+    const demandedDays = isFlagship ? 330 : int(extraRng, 180, 540);
+    let returnedLakh = 0;
+    if (!isFlagship && extraRng() >= 0.7) {
+      const headroom = Math.max(sanctionedLakh - expenditureLakh, 0);
+      returnedLakh = oneDecimal(Math.min(extraRng() * Math.min(5, sanctionedLakh * 0.15), headroom));
+    }
 
     works.push({
       id,
       title,
       type,
       state: place.state,
-      district: isFlagship ? "Bhopal" : place.district,
+      district,
       agency,
       status,
       sanctionedLakh,
@@ -240,6 +255,12 @@ function buildWorks(): Work[] {
       lastUpdate,
       lat: oneDecimal((isFlagship ? 23.26 : place.lat) + (rng() - 0.5) * 0.2),
       lon: oneDecimal((isFlagship ? 77.41 : place.lon) + (rng() - 0.5) * 0.2),
+      tenderHolder,
+      tenderAwardedBy,
+      department,
+      labourDeployed,
+      demandedDays,
+      returnedLakh,
     });
   });
 
